@@ -181,8 +181,14 @@ export const useMemberSearch = () => {
   // member shows up without the admin having to re-trigger Search.
   const [refreshToken, setRefreshToken] = useState(0);
 
+  // Nothing is fetched until the admin actually clicks Search - with a
+  // large player base, auto-loading an unfiltered page the instant this
+  // page mounts is a real cost for no reason (nobody asked for those
+  // rows yet). See handleSearch/resetForm.
+  const [hasSearched, setHasSearched] = useState(false);
+
   useEffect(() => {
-    if (activeTab !== 'Account') return undefined;
+    if (activeTab !== 'Account' || !hasSearched) return undefined;
     let cancelled = false;
 
     setResultsLoading(true);
@@ -204,7 +210,7 @@ export const useMemberSearch = () => {
     return () => {
       cancelled = true;
     };
-  }, [activeTab, appliedFilter, currentPage, recordsPerPage, refreshToken]);
+  }, [activeTab, hasSearched, appliedFilter, currentPage, recordsPerPage, refreshToken]);
 
   // Add Member modal
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -362,6 +368,7 @@ export const useMemberSearch = () => {
     if (activeTab === 'Account') {
       setAppliedFilter(buildFilter());
       setCurrentPage(1);
+      setHasSearched(true);
     }
     // Provider Account tab has no backend equivalent to search against
     // (see ProviderAccountSearchForm) - nothing to wire here.
@@ -399,6 +406,7 @@ export const useMemberSearch = () => {
       });
       setAppliedFilter({});
       setCurrentPage(1);
+      setHasSearched(false);
     } else {
       setProviderData({
         provider: 'AWC',
@@ -437,6 +445,7 @@ export const useMemberSearch = () => {
     currentPage,
     totalPages,
     goToPage,
+    hasSearched,
 
     // Setters
     setActiveTab,

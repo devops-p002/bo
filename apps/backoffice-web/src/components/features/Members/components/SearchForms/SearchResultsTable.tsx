@@ -11,7 +11,8 @@ const SearchResultsTable = ({
   onUsernameClick,
   results = [],
   resultsLoading = false,
-  resultsError = null
+  resultsError = null,
+  hasSearched = false
 }) => {
   const { isDarkTheme } = useTheme();
 
@@ -113,6 +114,9 @@ const SearchResultsTable = ({
   ];
 
   const renderAccountTable = () => {
+    if (!hasSearched) {
+      return <div className="text-xs text-center p-4 text-gray-500">Set your search criteria and click Search to see members.</div>;
+    }
     if (resultsLoading && results.length === 0) {
       return <div className="text-xs text-center p-4 text-gray-500">Loading…</div>;
     }

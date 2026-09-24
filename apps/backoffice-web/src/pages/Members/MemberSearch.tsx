@@ -70,6 +70,7 @@ const MemberSearchPage = () => {
     currentPage,
     totalPages,
     goToPage,
+    hasSearched,
     isAddModalOpen,
     addFormData,
     addSaving,
@@ -245,6 +246,7 @@ const MemberSearchPage = () => {
           results={results}
           resultsLoading={resultsLoading}
           resultsError={resultsError}
+          hasSearched={hasSearched}
         />
 
         {/* Pagination */}
@@ -255,9 +257,11 @@ const MemberSearchPage = () => {
             isDarkTheme ? 'text-gray-400' : 'text-gray-500'
           }`}>
             {activeTab === 'Account'
-              ? (totalCount === 0
-                ? 'Showing 0 of 0 entries'
-                : `Showing ${(currentPage - 1) * recordsPerPage + 1} to ${Math.min(currentPage * recordsPerPage, totalCount)} of ${totalCount} entries`)
+              ? (!hasSearched
+                ? 'No search run yet'
+                : totalCount === 0
+                  ? 'Showing 0 of 0 entries'
+                  : `Showing ${(currentPage - 1) * recordsPerPage + 1} to ${Math.min(currentPage * recordsPerPage, totalCount)} of ${totalCount} entries`)
               : 'Showing 1 to 5 of 5 entries (sample data)'}
           </div>
           <div className="flex items-center space-x-1">
@@ -277,7 +281,7 @@ const MemberSearchPage = () => {
               ← Previous
             </button>
 
-            {activeTab === 'Account' &&
+            {activeTab === 'Account' && hasSearched &&
               getPaginationNumbers(currentPage, totalPages).map((page, index) => (
                 <button
                   key={index}
