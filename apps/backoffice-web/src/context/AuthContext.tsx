@@ -66,11 +66,12 @@ function normalizeSession(session: { adminUserId: string; roles: string[]; email
 
 // Exported for later pages to call once they're wired to the real API -
 // on a 401 (cookie missing/expired/revoked), it clears the locally
-// cached profile so the UI stops claiming to be logged in, but it does
-// NOT redirect itself: a page mid-render is better placed to decide
-// how to surface that (e.g. ProtectedRoute's own redirect-to-/login on
-// its next check) than a shared fetch helper forcing a hard navigation
-// out from under it.
+// cached profile and broadcasts a DOM event so the UI stops claiming to
+// be logged in. It's a module-level function (not a hook), so it can't
+// call setUser/navigate itself - AuthProvider listens for this event
+// below and does the actual redirect-to-/login.
+const SESSION_EXPIRED_EVENT = 'bo-admin-session-expired';
+
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
@@ -79,6 +80,7 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
   });
   if (response.status === 401) {
     localStorage.removeItem(STORED_SESSION_KEY);
+    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
   }
   return response;
 }
@@ -104,6 +106,19 @@ export const AuthProvider = ({ children }: any) => {
     }
     setLoading(false);
   }, []);
+
+  // apiFetch broadcasts this when any request comes back 401 - drop the
+  // in-memory session too (not just localStorage) so isAuthenticated
+  // flips to false and send the admin back to login instead of leaving
+  // them stuck on a page where every request just keeps 401ing.
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setUser((current: any) => (current ? null : current));
+      navigate('/login', { replace: true });
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+  }, [navigate]);
 
   // Login function
   const login = async (email: string, password: string) => {
