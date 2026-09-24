@@ -10,16 +10,20 @@ import { AdminAuthService } from '../admin-auth.service.js';
 import { AuditIndexService } from '../audit-index.service.js';
 import type { AuditSource } from '../audit-index.service.js';
 import { BreakGlassService } from '../break-glass.service.js';
+import { BulkOperationsService } from '../bulk-operations.service.js';
 import { CaseQueueService } from '../case-queue.service.js';
 import { MakerCheckerService } from '../maker-checker.service.js';
+import { MemberGroupsService } from '../member-groups.service.js';
 import { PlayerLookupService } from '../player-lookup.service.js';
 import { PlayersService } from '../players.service.js';
 import { AppErrorFilter } from './app-error.filter.js';
 import { AdminAuthController, AuthController } from './admin-auth.controller.js';
 import { AuditIndexController } from './audit-index.controller.js';
 import { BreakGlassController } from './break-glass.controller.js';
+import { BulkOperationsController } from './bulk-operations.controller.js';
 import { CaseQueueController } from './case-queue.controller.js';
 import { MakerCheckerController } from './maker-checker.controller.js';
+import { MemberGroupsController } from './member-groups.controller.js';
 import { PlayerLookupController } from './player-lookup.controller.js';
 import { PlayersController } from './players.controller.js';
 import { RolesGuard } from './roles.guard.js';
@@ -28,7 +32,18 @@ import { DB_TOKEN } from './tokens.js';
 export { DB_TOKEN };
 
 @Module({
-  controllers: [AdminAuthController, AuthController, MakerCheckerController, CaseQueueController, BreakGlassController, AuditIndexController, PlayerLookupController, PlayersController],
+  controllers: [
+    AdminAuthController,
+    AuthController,
+    MakerCheckerController,
+    CaseQueueController,
+    BreakGlassController,
+    AuditIndexController,
+    PlayerLookupController,
+    PlayersController,
+    MemberGroupsController,
+    BulkOperationsController,
+  ],
   providers: [
     {
       provide: DB_TOKEN,
@@ -78,6 +93,16 @@ export { DB_TOKEN };
       provide: PlayersService,
       inject: [DB_TOKEN],
       useFactory: (db: Kysely<Database>) => new PlayersService(db),
+    },
+    {
+      provide: MemberGroupsService,
+      inject: [DB_TOKEN],
+      useFactory: (db: Kysely<Database>) => new MemberGroupsService(db),
+    },
+    {
+      provide: BulkOperationsService,
+      inject: [DB_TOKEN],
+      useFactory: (db: Kysely<Database>) => new BulkOperationsService(db),
     },
     {
       provide: AuditIndexService,

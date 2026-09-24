@@ -120,6 +120,37 @@ export interface PlayersTable {
   created_at: CreatedAtColumn;
 }
 
+export type MemberGroupStatus = 'ACTIVE' | 'INACTIVE';
+
+export interface MemberGroupsTable {
+  id: string;
+  name: string;
+  category: string | null;
+  status: ColumnType<MemberGroupStatus, MemberGroupStatus | undefined, MemberGroupStatus>;
+  created_at: CreatedAtColumn;
+}
+
+export interface MemberGroupMembersTable {
+  group_id: string;
+  player_id: string;
+  added_at: CreatedAtColumn;
+}
+
+export type BulkOperationType = 'STATUS_CHANGE' | 'VIP_LEVEL_UPDATE' | 'BALANCE_ADJUSTMENT';
+export type BulkOperationStatus = 'PENDING' | 'COMPLETED' | 'FAILED';
+
+export interface BulkOperationsTable {
+  id: string;
+  operation_type: BulkOperationType;
+  value: string;
+  affected_count: ColumnType<number, number | undefined, number>;
+  status: ColumnType<BulkOperationStatus, BulkOperationStatus | undefined, BulkOperationStatus>;
+  error_message: string | null;
+  created_by: string;
+  created_at: CreatedAtColumn;
+  completed_at: NullableTimestampColumn;
+}
+
 export interface Database {
   admin_users: AdminUsersTable;
   admin_roles: AdminRolesTable;
@@ -131,4 +162,7 @@ export interface Database {
   audit_index: AuditIndexTable;
   audit_index_watermarks: AuditIndexWatermarksTable;
   players: PlayersTable;
+  member_groups: MemberGroupsTable;
+  member_group_members: MemberGroupMembersTable;
+  bulk_operations: BulkOperationsTable;
 }

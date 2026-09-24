@@ -77,3 +77,33 @@ export const updatePlayerSchema = z.object({
   email: z.string().trim().email().optional(),
 });
 export type UpdatePlayerDto = z.infer<typeof updatePlayerSchema>;
+
+const MEMBER_GROUP_STATUSES = ['ACTIVE', 'INACTIVE'] as const;
+
+export const createMemberGroupSchema = z.object({
+  name: z.string().trim().min(1).max(128),
+  category: z.string().trim().min(1).optional(),
+  status: z.enum(MEMBER_GROUP_STATUSES).optional(),
+});
+export type CreateMemberGroupDto = z.infer<typeof createMemberGroupSchema>;
+
+export const updateMemberGroupSchema = z.object({
+  name: z.string().trim().min(1).max(128).optional(),
+  category: z.string().trim().min(1).optional(),
+  status: z.enum(MEMBER_GROUP_STATUSES).optional(),
+});
+export type UpdateMemberGroupDto = z.infer<typeof updateMemberGroupSchema>;
+
+export const addGroupMemberSchema = z.object({
+  playerId: z.string().trim().min(1),
+});
+export type AddGroupMemberDto = z.infer<typeof addGroupMemberSchema>;
+
+const BULK_OPERATION_TYPES = ['STATUS_CHANGE', 'VIP_LEVEL_UPDATE', 'BALANCE_ADJUSTMENT'] as const;
+
+export const createBulkOperationSchema = z.object({
+  operationType: z.enum(BULK_OPERATION_TYPES),
+  playerIds: z.array(z.string().trim().min(1)).min(1),
+  value: z.string().trim().min(1),
+});
+export type CreateBulkOperationDto = z.infer<typeof createBulkOperationSchema>;

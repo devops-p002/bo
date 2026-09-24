@@ -1,51 +1,51 @@
-import React, { useMemo } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import React, { useEffect, useState } from 'react';
 import ComponentTemplate from '../ComponentTemplate';
+import { listPlayers } from '../../../services/api/players';
 
-// Real backend field: User.vipLevel (VIPLevel enum: BRONZE/SILVER/GOLD/
-// PLATINUM/DIAMOND). There's no points/benefits/nextLevel concept on the
-// backend - this lists real members with their real VIP level instead of
-// fabricating those fields. `role` isn't needed here but username/balance/
-// currency give a useful real "VIP roster" view.
-const GET_VIP_MEMBERS = gql`
-  query GetVipMembers($pagination: PaginationInput) {
-    users(pagination: $pagination) {
-      totalCount
-      nodes {
-        id
-        username
-        vipLevel
-        balance
-        currency
-      }
-    }
-  }
-`;
-
+// Real backend field: Player.vipLevel (BRONZE/SILVER/GOLD/PLATINUM/DIAMOND).
+// There's no points/benefits/nextLevel concept on the backend - this lists
+// real members with their real VIP level instead of fabricating those
+// fields.
 const VIP_LEVELS = ['DIAMOND', 'PLATINUM', 'GOLD', 'SILVER', 'BRONZE'];
 
 const MemberVIP = () => {
-  // Pull a reasonably large page so the VIP-level counts below are computed
-  // over the real, mostly-small seeded dataset rather than paginating -
-  // this page has no filter/pagination UI of its own to change that.
-  const variables = useMemo(() => ({ pagination: { page: 1, limit: 200 } }), []);
-  const { data, loading, error } = useQuery(GET_VIP_MEMBERS, {
-    variables,
-    fetchPolicy: 'cache-and-network',
-  });
+  const [players, setPlayers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const users = data?.users?.nodes ?? [];
+  useEffect(() => {
+    let cancelled = false;
+    // Pull a reasonably large page so the VIP-level counts below are
+    // computed over the real, mostly-small seeded dataset rather than
+    // paginating - this page has no filter/pagination UI of its own to
+    // change that.
+    listPlayers({}, { page: 1, limit: 200 })
+      .then((data) => {
+        if (cancelled) return;
+        setPlayers(data.nodes ?? []);
+        setError(null);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err.message || 'Failed to load members');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const vipData = users.map((u) => ({
-    id: u.id,
-    username: u.username,
-    level: u.vipLevel,
-    balance: `${(u.balance ?? 0).toLocaleString()} ${u.currency || ''}`.trim(),
+  const vipData = players.map((p) => ({
+    id: p.id,
+    username: p.username || p.email,
+    level: p.vipLevel,
+    balance: `${(p.balance ?? 0).toLocaleString()} ${p.currency || ''}`.trim(),
   }));
 
   const stats = VIP_LEVELS.map((level) => ({
     label: `${level.charAt(0)}${level.slice(1).toLowerCase()} Members`,
-    value: String(users.filter((u) => u.vipLevel === level).length),
+    value: String(players.filter((p) => p.vipLevel === level).length),
   }));
 
   const columns = ['Username', 'VIP Level', 'Balance'];
@@ -59,7 +59,7 @@ const MemberVIP = () => {
       rowKeys={['username', 'level', 'balance']}
       stats={stats}
       loading={loading}
-      error={error ? `Failed to load members: ${error.message}` : null}
+      error={error ? `Failed to load members: ${error}` : null}
       hasAddButton={false}
     />
   );
