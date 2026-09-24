@@ -1,28 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { useState, useEffect, useCallback } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { Breadcrumb } from '../../components/common/UI';
 import { useSearchParams } from 'react-router-dom';
-
-const GET_DEPOSITS_PAGE = gql`
-  query DepositDetailsPage($pagination: PaginationInput, $filter: TransactionFilterInput) {
-    transactions(pagination: $pagination, filter: $filter) {
-      totalCount
-      nodes {
-        id
-        amount
-        currency
-        status
-        paymentMethod
-        createdAt
-        processedAt
-        user {
-          username
-        }
-      }
-    }
-  }
-`;
+import { listTransactions } from '../../services/api/transactions';
 
 // Turns a dashboard period key ("today", "this-week", ...) into a
 // DateRangeInput for the transactions(filter: { dateRange }) query.
@@ -77,21 +57,39 @@ const DepositDetailsPage = () => {
     return titles[period] || 'Today-Confirmed Deposit';
   };
 
-  // Memoized so useQuery gets a stable `variables` reference across renders
-  // (see RegisteredUsersPage.js - an inline object literal here would give
-  // Apollo a new reference every render, causing an infinite refetch loop).
-  const queryVariables = useMemo(() => ({
-    pagination: { page: currentPage, limit: recordsPerPage },
-    filter: { type: 'DEPOSIT', dateRange: getDateRangeForPeriod(period) },
-  }), [currentPage, recordsPerPage, period]);
+  const [currentPageData, setCurrentPageData] = useState<any[]>([]);
+  const [totalEntries, setTotalEntries] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const { data, loading, error } = useQuery(GET_DEPOSITS_PAGE, {
-    variables: queryVariables,
-    fetchPolicy: 'cache-and-network',
-  });
+  const fetchPage = useCallback(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    const dateRange = getDateRangeForPeriod(period);
+    listTransactions(
+      { type: 'DEPOSIT', dateRangeStart: dateRange.start, dateRangeEnd: dateRange.end },
+      { page: currentPage, limit: recordsPerPage },
+    )
+      .then((data) => {
+        if (cancelled) return;
+        setCurrentPageData(data.nodes);
+        setTotalEntries(data.totalCount);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentPage, recordsPerPage, period]);
 
-  const currentPageData = data?.transactions?.nodes ?? [];
-  const totalEntries = data?.transactions?.totalCount ?? 0;
+  useEffect(() => fetchPage(), [fetchPage]);
+
   const totalPages = Math.max(1, Math.ceil(totalEntries / recordsPerPage));
   const startEntry = totalEntries === 0 ? 0 : (currentPage - 1) * recordsPerPage + 1;
   const endEntry = Math.min(currentPage * recordsPerPage, totalEntries);
@@ -108,9 +106,9 @@ const DepositDetailsPage = () => {
       headers.join(','),
       ...currentPageData.map((deposit, index) => [
         startEntry + index,
-        formatDate(deposit.processedAt || deposit.createdAt),
+        formatDate(deposit.updatedAt || deposit.createdAt),
         deposit.id,
-        deposit.user?.username || '',
+        deposit.username || '',
         deposit.amount,
         deposit.paymentMethod || '',
         formatEnumLabel(deposit.status)
@@ -261,7 +259,7 @@ const DepositDetailsPage = () => {
                 {loading ? (
                   <tr><td colSpan={7} className="text-center text-xs p-4 text-gray-500">Loading…</td></tr>
                 ) : error ? (
-                  <tr><td colSpan={7} className="text-center text-xs p-4 text-red-500">Failed to load: {error.message}</td></tr>
+                  <tr><td colSpan={7} className="text-center text-xs p-4 text-red-500">Failed to load: {error}</td></tr>
                 ) : currentPageData.length === 0 ? (
                   <tr><td colSpan={7} className="text-center text-xs p-4 text-gray-500">No deposits in this period.</td></tr>
                 ) : currentPageData.map((deposit, index) => (
@@ -270,16 +268,16 @@ const DepositDetailsPage = () => {
                       {startEntry + index}
                     </td>
                     <td className={`text-xs ${isDarkTheme ? 'text-gray-300' : 'text-gray-700'} p-2`}>
-                      {formatDate(deposit.processedAt || deposit.createdAt)}
+                      {formatDate(deposit.updatedAt || deposit.createdAt)}
                     </td>
                     <td className={`text-xs ${isDarkTheme ? 'text-gray-300' : 'text-gray-700'} p-2`}>
                       {deposit.id}
                     </td>
                     <td
                       className={`text-xs ${isDarkTheme ? 'text-blue-400' : 'text-blue-600'} hover:underline cursor-pointer p-2`}
-                      onClick={() => window.open(`/members/profile/${deposit.user?.username}`, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes')}
+                      onClick={() => window.open(`/members/profile/${deposit.username}`, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes')}
                     >
-                      {deposit.user?.username}
+                      {deposit.username}
                     </td>
                     <td className={`text-xs ${isDarkTheme ? 'text-gray-300' : 'text-gray-700'} text-right p-2`}>
                       {deposit.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

@@ -1,27 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { useState, useEffect, useCallback } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { Breadcrumb } from '../../components/common/UI';
 import { useSearchParams } from 'react-router-dom';
-
-const GET_WITHDRAWALS_PAGE = gql`
-  query WithdrawalDetailsPage($pagination: PaginationInput, $filter: TransactionFilterInput) {
-    transactions(pagination: $pagination, filter: $filter) {
-      totalCount
-      nodes {
-        id
-        amount
-        currency
-        status
-        createdAt
-        processedAt
-        user {
-          username
-        }
-      }
-    }
-  }
-`;
+import { listTransactions } from '../../services/api/transactions';
 
 // Turns a dashboard period key ("today", "this-week", ...) into a
 // DateRangeInput for the transactions(filter: { dateRange }) query.
@@ -76,21 +57,39 @@ const WithdrawalDetailsPage = () => {
     return titles[period] || 'Today-Confirmed Withdrawal';
   };
 
-  // Memoized so useQuery gets a stable `variables` reference across renders
-  // (see RegisteredUsersPage.js - an inline object literal here would give
-  // Apollo a new reference every render, causing an infinite refetch loop).
-  const queryVariables = useMemo(() => ({
-    pagination: { page: currentPage, limit: recordsPerPage },
-    filter: { type: 'WITHDRAWAL', dateRange: getDateRangeForPeriod(period) },
-  }), [currentPage, recordsPerPage, period]);
+  const [currentPageData, setCurrentPageData] = useState<any[]>([]);
+  const [totalEntries, setTotalEntries] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const { data, loading, error } = useQuery(GET_WITHDRAWALS_PAGE, {
-    variables: queryVariables,
-    fetchPolicy: 'cache-and-network',
-  });
+  const fetchPage = useCallback(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    const dateRange = getDateRangeForPeriod(period);
+    listTransactions(
+      { type: 'WITHDRAWAL', dateRangeStart: dateRange.start, dateRangeEnd: dateRange.end },
+      { page: currentPage, limit: recordsPerPage },
+    )
+      .then((data) => {
+        if (cancelled) return;
+        setCurrentPageData(data.nodes);
+        setTotalEntries(data.totalCount);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentPage, recordsPerPage, period]);
 
-  const currentPageData = data?.transactions?.nodes ?? [];
-  const totalEntries = data?.transactions?.totalCount ?? 0;
+  useEffect(() => fetchPage(), [fetchPage]);
+
   const totalPages = Math.max(1, Math.ceil(totalEntries / recordsPerPage));
   const startEntry = totalEntries === 0 ? 0 : (currentPage - 1) * recordsPerPage + 1;
   const endEntry = Math.min(currentPage * recordsPerPage, totalEntries);
@@ -107,9 +106,9 @@ const WithdrawalDetailsPage = () => {
       headers.join(','),
       ...currentPageData.map((withdrawal, index) => [
         startEntry + index,
-        formatDate(withdrawal.processedAt || withdrawal.createdAt),
+        formatDate(withdrawal.updatedAt || withdrawal.createdAt),
         withdrawal.id,
-        withdrawal.user?.username || '',
+        withdrawal.username || '',
         withdrawal.amount,
         formatEnumLabel(withdrawal.status)
       ].join(','))
@@ -256,7 +255,7 @@ const WithdrawalDetailsPage = () => {
                 {loading ? (
                   <tr><td colSpan={6} className="text-center text-xs p-4 text-gray-500">Loading…</td></tr>
                 ) : error ? (
-                  <tr><td colSpan={6} className="text-center text-xs p-4 text-red-500">Failed to load: {error.message}</td></tr>
+                  <tr><td colSpan={6} className="text-center text-xs p-4 text-red-500">Failed to load: {error}</td></tr>
                 ) : currentPageData.length === 0 ? (
                   <tr><td colSpan={6} className="text-center text-xs p-4 text-gray-500">No withdrawals in this period.</td></tr>
                 ) : currentPageData.map((withdrawal, index) => (
@@ -265,16 +264,16 @@ const WithdrawalDetailsPage = () => {
                       {startEntry + index}
                     </td>
                     <td className={`text-xs ${isDarkTheme ? 'text-gray-300' : 'text-gray-700'} p-2`}>
-                      {formatDate(withdrawal.processedAt || withdrawal.createdAt)}
+                      {formatDate(withdrawal.updatedAt || withdrawal.createdAt)}
                     </td>
                     <td className={`text-xs ${isDarkTheme ? 'text-gray-300' : 'text-gray-700'} p-2`}>
                       {withdrawal.id}
                     </td>
                     <td
                       className={`text-xs ${isDarkTheme ? 'text-blue-400' : 'text-blue-600'} hover:underline cursor-pointer p-2`}
-                      onClick={() => window.open(`/members/profile/${withdrawal.user?.username}`, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes')}
+                      onClick={() => window.open(`/members/profile/${withdrawal.username}`, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes')}
                     >
-                      {withdrawal.user?.username}
+                      {withdrawal.username}
                     </td>
                     <td className={`text-xs ${isDarkTheme ? 'text-gray-300' : 'text-gray-700'} text-right p-2`}>
                       {withdrawal.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
