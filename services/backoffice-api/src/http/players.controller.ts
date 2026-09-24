@@ -37,6 +37,14 @@ export class PlayersController {
     return this.players.getById(id);
   }
 
+  // Other players who share a device fingerprint with this one - real
+  // fraud/multi-account signal from services/player-api's client-side
+  // fingerprint collection (see player_devices/getLinkedAccounts).
+  @Get(':id/linked-accounts')
+  async getLinkedAccounts(@Param('id') id: string) {
+    return this.players.getLinkedAccounts(id);
+  }
+
   @Post()
   async create(@Body(new ZodValidationPipe(createPlayerSchema)) body: CreatePlayerDto) {
     return this.players.create(body);

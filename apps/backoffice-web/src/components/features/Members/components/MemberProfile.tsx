@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTheme } from '../../../../context/ThemeContext';
-import { getPlayer, updatePlayer } from '../../../../services/api/players';
+import { getPlayer, getLinkedAccounts, updatePlayer } from '../../../../services/api/players';
+import type { LinkedAccount } from '../../../../services/api/players';
 import PopupLayout from '../../../common/Layout/PopupLayout';
 import Breadcrumb from '../../../common/UI/Breadcrumb';
 import { SectionHeader, DataRow, SummaryRow } from './MemberProfile/ProfileUIComponents';
@@ -48,11 +49,41 @@ const MemberProfile = ({ memberId, isPopup = false }) => {
     loadProfile();
   }, [loadProfile]);
 
+  // Other accounts sharing a device fingerprint with this one - the real
+  // fraud/multi-account signal apps/player-web's client-side fingerprint
+  // collection exists for (see services/backoffice-api's
+  // PlayersService.getLinkedAccounts). Loaded separately from the main
+  // profile so a slow/failed lookup here never blocks the rest of the
+  // page - failing open (empty list) rather than surfacing this as a
+  // page-level error.
+  const [linkedAccounts, setLinkedAccounts] = useState<LinkedAccount[]>([]);
+  const [linkedAccountsLoading, setLinkedAccountsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!currentMemberId) return undefined;
+    let cancelled = false;
+    setLinkedAccountsLoading(true);
+    getLinkedAccounts(currentMemberId)
+      .then((accounts) => {
+        if (!cancelled) setLinkedAccounts(accounts);
+      })
+      .catch(() => {
+        if (!cancelled) setLinkedAccounts([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLinkedAccountsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentMemberId]);
+
   // Collapsible sections state
   const [expandedSections, setExpandedSections] = useState({
     general: true,
     contact: true,
     action: true,
+    devices: true,
     summary: true,
     balance: true,
   });
@@ -262,8 +293,62 @@ const MemberProfile = ({ memberId, isPopup = false }) => {
               <DataRow label="Registration Time" value={formatDateTime(user.createdAt)} centerAlign={true} />
               <DataRow label="Last Login Time" value={formatDateTime(user.lastLoginAt)} centerAlign={true} />
               <DataRow label="Last Login IP" value={user.lastLoginIP || '-'} centerAlign={true} />
+              {/* Server-derived from last_login_ip (geolocation) / the login
+                  request's User-Agent (device classification) - see
+                  services/player-api/src/login-context.ts. */}
+              <DataRow label="Last Login Location" value={user.lastLoginCountry || '-'} centerAlign={true} />
+              <DataRow label="Last Login Device" value={user.lastLoginDevice || '-'} centerAlign={true} />
               {/* First/last deposit, withdrawal, adjustment, bonus and bet
                   timestamps aren't tracked yet - only aggregate totals are. */}
+            </div>
+          )}
+        </div>
+
+        {/* Devices & Linked Accounts Section - real device-fingerprint
+            based fraud/multi-account signal (see services/backoffice-
+            api's PlayersService.getLinkedAccounts and this file's own
+            linkedAccounts effect). Only ever shows accounts that share an
+            actual client-computed device fingerprint - never a guess. */}
+        <div className={`${isDarkTheme ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm`}>
+          <SectionHeader
+            title="Linked Accounts"
+            isExpanded={expandedSections.devices}
+            onToggle={() => toggleSection('devices')}
+          />
+
+          {expandedSections.devices && (
+            <div className="p-1.5">
+              {linkedAccountsLoading && (
+                <div className={`text-xs ${isDarkTheme ? 'text-gray-400' : 'text-gray-500'}`}>Checking for shared devices…</div>
+              )}
+              {!linkedAccountsLoading && linkedAccounts.length === 0 && (
+                <div className={`text-xs ${isDarkTheme ? 'text-gray-400' : 'text-gray-500'}`}>
+                  No other account has logged in from a device this member has used.
+                </div>
+              )}
+              {!linkedAccountsLoading && linkedAccounts.length > 0 && (
+                <div className="space-y-1">
+                  <div className={`text-xs font-medium mb-1 ${isDarkTheme ? 'text-yellow-400' : 'text-yellow-700'}`}>
+                    ⚠ {linkedAccounts.length} other account{linkedAccounts.length === 1 ? '' : 's'} share{linkedAccounts.length === 1 ? 's' : ''} a device with this member
+                  </div>
+                  {linkedAccounts.map((account) => (
+                    <a
+                      key={account.playerId}
+                      href={`/members/profile/${account.playerId}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={`flex items-center justify-between px-2 py-1 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                        isDarkTheme ? 'text-gray-300' : 'text-gray-700'
+                      }`}
+                    >
+                      <span>{account.username || account.email}</span>
+                      <span className={isDarkTheme ? 'text-gray-500' : 'text-gray-400'}>
+                        {account.sharedFingerprints} shared device{account.sharedFingerprints === 1 ? '' : 's'} · last seen {formatDateTime(account.lastSeenAt)}
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

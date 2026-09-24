@@ -67,6 +67,17 @@ export interface PlayerSessionsTable {
   revoked_at: NullableTimestampColumn;
 }
 
+export interface PlayerDevicesTable {
+  id: string;
+  player_id: string;
+  fingerprint: string;
+  user_agent: string | null;
+  ip_address: string | null;
+  first_seen_at: CreatedAtColumn;
+  last_seen_at: TimestampColumn;
+  login_count: ColumnType<number, number | undefined, number>;
+}
+
 export type GameCategory = 'SLOTS' | 'LIVE_CASINO' | 'GAME_SHOWS' | 'TABLE_GAMES' | 'ORIGINALS';
 
 export interface GamesTable {
@@ -83,5 +94,6 @@ export interface Database {
   players: PlayersTable;
   transactions: TransactionsTable;
   player_sessions: PlayerSessionsTable;
+  player_devices: PlayerDevicesTable;
   games: GamesTable;
 }

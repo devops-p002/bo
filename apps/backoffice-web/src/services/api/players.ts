@@ -65,3 +65,20 @@ export async function createPlayer(input: Record<string, unknown>) {
   });
   return parseOrThrow(response);
 }
+
+export interface LinkedAccount {
+  playerId: string;
+  username: string | null;
+  email: string;
+  status: string;
+  sharedFingerprints: number;
+  lastSeenAt: string;
+}
+
+// Other players who share a device fingerprint with this one - real
+// fraud/multi-account signal from apps/player-web's device fingerprint
+// collection (see services/backoffice-api's player_devices table).
+export async function getLinkedAccounts(id: string) {
+  const response = await apiFetch(`/players/${id}/linked-accounts`);
+  return parseOrThrow(response) as Promise<LinkedAccount[]>;
+}

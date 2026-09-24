@@ -25,14 +25,14 @@ export class AuthController {
     @Req() req: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply,
   ) {
-    const result = await this.playerAuth.register(body, req.ip, req.headers['user-agent']);
+    const result = await this.playerAuth.register(body, req.ip, req.headers['user-agent'], this.readFingerprint(req));
     this.setSessionCookie(reply, result.accessToken);
     return { playerId: result.playerId };
   }
 
   @Post('login')
   async login(@Body(new ZodValidationPipe(loginSchema)) body: LoginDto, @Req() req: FastifyRequest, @Res({ passthrough: true }) reply: FastifyReply) {
-    const result = await this.playerAuth.login(body.email, body.password, req.ip, req.headers['user-agent']);
+    const result = await this.playerAuth.login(body.email, body.password, req.ip, req.headers['user-agent'], this.readFingerprint(req));
     this.setSessionCookie(reply, result.accessToken);
     return { playerId: result.playerId };
   }
@@ -57,6 +57,14 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async updateMe(@Req() req: AuthenticatedPlayerRequest, @Body(new ZodValidationPipe(updateProfileSchema)) body: UpdateProfileDto) {
     return this.wallet.updateProfile(req.playerId!, body);
+  }
+
+  // apps/player-web/src/lib/fingerprint.ts sends this on every register/
+  // login call. A missing or malformed header is not an error - see
+  // PlayerAuthService.recordDevice's own length guard.
+  private readFingerprint(req: FastifyRequest): string | undefined {
+    const header = req.headers['x-device-fingerprint'];
+    return typeof header === 'string' ? header : undefined;
   }
 
   private setSessionCookie(reply: FastifyReply, accessToken: string) {

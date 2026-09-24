@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getDeviceFingerprint } from '../lib/fingerprint';
 
 export interface Wallet {
   id: string;
@@ -106,13 +107,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [navigate]);
 
   const login = async (email: string, password: string) => {
-    const response = await apiFetch('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+    const fingerprint = await getDeviceFingerprint();
+    const response = await apiFetch('/auth/login', {
+      method: 'POST',
+      headers: { 'x-device-fingerprint': fingerprint },
+      body: JSON.stringify({ email, password }),
+    });
     await parseOrThrow(response);
     await refreshWallet();
   };
 
   const register = async (email: string, password: string, username?: string) => {
-    const response = await apiFetch('/auth/register', { method: 'POST', body: JSON.stringify({ email, password, username }) });
+    const fingerprint = await getDeviceFingerprint();
+    const response = await apiFetch('/auth/register', {
+      method: 'POST',
+      headers: { 'x-device-fingerprint': fingerprint },
+      body: JSON.stringify({ email, password, username }),
+    });
     await parseOrThrow(response);
     await refreshWallet();
   };

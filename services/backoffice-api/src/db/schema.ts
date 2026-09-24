@@ -139,6 +139,22 @@ export interface MemberGroupMembersTable {
   added_at: CreatedAtColumn;
 }
 
+// Read-only here (backoffice_api_app only has SELECT - see the
+// create-player-devices migration; services/player-api owns writing to
+// it). One row per (player, fingerprint) pair - see that migration's
+// comment on why this is indexed on fingerprint rather than being just
+// another players column.
+export interface PlayerDevicesTable {
+  id: string;
+  player_id: string;
+  fingerprint: string;
+  user_agent: string | null;
+  ip_address: string | null;
+  first_seen_at: CreatedAtColumn;
+  last_seen_at: TimestampColumn;
+  login_count: ColumnType<number, number | undefined, number>;
+}
+
 export type BulkOperationType = 'STATUS_CHANGE' | 'VIP_LEVEL_UPDATE' | 'BALANCE_ADJUSTMENT';
 export type BulkOperationStatus = 'PENDING' | 'COMPLETED' | 'FAILED';
 
@@ -227,6 +243,7 @@ export interface Database {
   players: PlayersTable;
   member_groups: MemberGroupsTable;
   member_group_members: MemberGroupMembersTable;
+  player_devices: PlayerDevicesTable;
   bulk_operations: BulkOperationsTable;
   transactions: TransactionsTable;
   games: GamesTable;

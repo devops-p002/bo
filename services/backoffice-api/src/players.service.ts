@@ -229,4 +229,54 @@ export class PlayersService {
     }
     return this.getById(id);
   }
+
+  // The actual fraud/multi-account value of player_devices: given a
+  // player, find every OTHER player who has ever logged in from any of
+  // the same device fingerprints. Two-step (not one join) because a
+  // player can have several devices and each device can be shared with
+  // several other players - collecting distinct fingerprints first keeps
+  // the second query a simple IN rather than a self-join that would
+  // double-count a pair sharing more than one device.
+  async getLinkedAccounts(id: string) {
+    const ownDevices = await this.db.selectFrom('player_devices').select('fingerprint').where('player_id', '=', id).execute();
+    const fingerprints = [...new Set(ownDevices.map((d) => d.fingerprint))];
+    if (fingerprints.length === 0) return [];
+
+    const rows = await this.db
+      .selectFrom('player_devices')
+      .innerJoin('players', 'players.id', 'player_devices.player_id')
+      .select([
+        'players.id as playerId',
+        'players.username as username',
+        'players.email as email',
+        'players.status as status',
+        'player_devices.fingerprint as fingerprint',
+        'player_devices.last_seen_at as lastSeenAt',
+      ])
+      .where('player_devices.fingerprint', 'in', fingerprints)
+      .where('player_devices.player_id', '!=', id)
+      .orderBy('player_devices.last_seen_at', 'desc')
+      .execute();
+
+    // Collapse to one row per linked player (they may share more than one
+    // fingerprint with the looked-up player) - keep the most recent
+    // shared-device sighting, which the ORDER BY above already puts first.
+    const byPlayer = new Map<string, { playerId: string; username: string | null; email: string; status: PlayerStatus; sharedFingerprints: number; lastSeenAt: string }>();
+    for (const row of rows) {
+      const existing = byPlayer.get(row.playerId);
+      if (existing) {
+        existing.sharedFingerprints += 1;
+      } else {
+        byPlayer.set(row.playerId, {
+          playerId: row.playerId,
+          username: row.username,
+          email: row.email,
+          status: row.status,
+          sharedFingerprints: 1,
+          lastSeenAt: row.lastSeenAt.toISOString(),
+        });
+      }
+    }
+    return [...byPlayer.values()];
+  }
 }
