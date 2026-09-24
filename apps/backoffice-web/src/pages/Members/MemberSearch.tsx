@@ -2,6 +2,7 @@ import React from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import Breadcrumb from '../../components/common/UI/Breadcrumb';
 import { useMemberSearch } from '../../components/features/Members/hooks/useMemberSearch';
+import AddMemberModal from '../../components/features/Members/components/AddMemberModal';
 import AccountSearchForm from '../../components/features/Members/components/SearchForms/AccountSearchForm';
 import ProviderAccountSearchForm from '../../components/features/Members/components/SearchForms/ProviderAccountSearchForm';
 import ColumnVisibilityDropdown from '../../components/features/Members/components/SearchForms/ColumnVisibilityDropdown';
@@ -40,7 +41,15 @@ const MemberSearchPage = () => {
     totalCount,
     currentPage,
     totalPages,
-    goToPage
+    goToPage,
+    isAddModalOpen,
+    addFormData,
+    addSaving,
+    addError,
+    openAddModal,
+    closeAddModal,
+    handleAddInputChange,
+    handleAddSubmit
   } = useMemberSearch();
 
   return (
@@ -51,9 +60,17 @@ const MemberSearchPage = () => {
       </div>
 
       {/* Page Title */}
-      <h1 className={`text-lg font-semibold mb-3 ${isDarkTheme ? 'text-gray-100' : 'text-gray-900'}`}>
-        Search
-      </h1>
+      <div className="flex items-center justify-between mb-3">
+        <h1 className={`text-lg font-semibold ${isDarkTheme ? 'text-gray-100' : 'text-gray-900'}`}>
+          Search
+        </h1>
+        <button
+          onClick={openAddModal}
+          className="px-3 py-1.5 text-xs font-medium bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-1 focus:ring-primary-500 transition-colors"
+        >
+          + Add Member
+        </button>
+      </div>
 
       {/* Tab Navigation */}
       <div className="mb-3">
@@ -249,8 +266,18 @@ const MemberSearchPage = () => {
           </div>
         </div>
       </div>
+
+      <AddMemberModal
+        isOpen={isAddModalOpen}
+        onClose={closeAddModal}
+        formData={addFormData}
+        onChange={handleAddInputChange}
+        onSubmit={handleAddSubmit}
+        saving={addSaving}
+        error={addError}
+      />
     </div>
   );
 };
 
-export default MemberSearchPage; 
+export default MemberSearchPage;

@@ -1,6 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNotification } from '../../../../context/NotificationContext';
-import { listPlayers } from '../../../../services/api/players';
+import { createPlayer, listPlayers } from '../../../../services/api/players';
+
+const EMPTY_ADD_FORM = {
+  username: '',
+  email: '',
+  firstName: '',
+  lastName: '',
+  phone: '',
+  vipLevel: 'BRONZE',
+};
 
 export const useMemberSearch = () => {
   const notification = useNotification();
@@ -113,6 +122,11 @@ export const useMemberSearch = () => {
   const [resultsError, setResultsError] = useState<any>(null);
   const totalPages = Math.max(1, Math.ceil(totalCount / recordsPerPage));
 
+  // Bumped after a successful "Add Member" so the results effect below
+  // re-runs even when the filter/page/limit haven't changed - the new
+  // member shows up without the admin having to re-trigger Search.
+  const [refreshToken, setRefreshToken] = useState(0);
+
   useEffect(() => {
     if (activeTab !== 'Account') return undefined;
     let cancelled = false;
@@ -136,7 +150,54 @@ export const useMemberSearch = () => {
     return () => {
       cancelled = true;
     };
-  }, [activeTab, appliedFilter, currentPage, recordsPerPage]);
+  }, [activeTab, appliedFilter, currentPage, recordsPerPage, refreshToken]);
+
+  // Add Member modal
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [addFormData, setAddFormData] = useState(EMPTY_ADD_FORM);
+  const [addSaving, setAddSaving] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
+
+  const openAddModal = useCallback(() => {
+    setAddFormData(EMPTY_ADD_FORM);
+    setAddError(null);
+    setIsAddModalOpen(true);
+  }, []);
+
+  const closeAddModal = useCallback(() => {
+    if (addSaving) return;
+    setIsAddModalOpen(false);
+  }, [addSaving]);
+
+  const handleAddInputChange = useCallback((field: string, value: string) => {
+    setAddFormData((prev) => ({ ...prev, [field]: value }));
+  }, []);
+
+  const handleAddSubmit = useCallback(async () => {
+    if (!addFormData.username.trim() || !addFormData.email.trim()) {
+      setAddError('Username and email are required.');
+      return;
+    }
+    try {
+      setAddSaving(true);
+      setAddError(null);
+      await createPlayer({
+        username: addFormData.username.trim(),
+        email: addFormData.email.trim(),
+        firstName: addFormData.firstName.trim() || undefined,
+        lastName: addFormData.lastName.trim() || undefined,
+        phone: addFormData.phone.trim() || undefined,
+        vipLevel: addFormData.vipLevel,
+      });
+      notification.success(`Member "${addFormData.username}" created.`);
+      setIsAddModalOpen(false);
+      setRefreshToken((n) => n + 1);
+    } catch (err: any) {
+      setAddError(err.message || 'Failed to create member.');
+    } finally {
+      setAddSaving(false);
+    }
+  }, [addFormData, notification]);
 
   // Handlers
   const handleInputChange = (field, value) => {
@@ -300,6 +361,16 @@ export const useMemberSearch = () => {
     handleSave,
     handleSearch,
     resetForm,
-    handleUsernameClick
+    handleUsernameClick,
+
+    // Add Member modal
+    isAddModalOpen,
+    addFormData,
+    addSaving,
+    addError,
+    openAddModal,
+    closeAddModal,
+    handleAddInputChange,
+    handleAddSubmit
   };
 };
