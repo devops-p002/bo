@@ -31,7 +31,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       >
         <div className="h-16 flex items-center px-5 border-b border-surface-600">
           <Link to="/" className="flex items-center gap-2 font-extrabold text-lg tracking-tight">
-            <span className="text-accent-400">Sun</span>rion
+            <span className="text-accent-400">Bet</span>Queen
           </Link>
         </div>
         <nav className="p-3 space-y-1">

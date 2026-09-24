@@ -9,7 +9,7 @@ const TITLES: Record<string, string> = {
   LIVE_CASINO: 'Live Casino',
   GAME_SHOWS: 'Game Shows',
   TABLE_GAMES: 'Table Games',
-  ORIGINALS: 'Sunrion Originals',
+  ORIGINALS: 'BetQueen Originals',
 };
 
 export default function CategoryPage() {

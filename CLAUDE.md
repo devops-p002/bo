@@ -13,7 +13,7 @@
   own, unlike the earlier `platform/` build's per-domain services.
 - `apps/player-web`: the player-facing site (React 18 + Vite + Tailwind,
   dark casino theme, Stake-inspired layout/UX under original branding -
-  "Sunrion"). Real auth, wallet (deposit/withdraw requests), and a games
+  "BetQueen"). Real auth, wallet (deposit/withdraw requests), and a games
   catalog browsing UI. No real game engine exists yet - a game's detail
   page is an honest "not wired up" placeholder, not a fake spin/deal flow.
 - `services/player-api`: NestJS/Fastify + Kysely, its own least-privilege

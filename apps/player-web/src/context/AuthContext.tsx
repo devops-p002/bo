@@ -32,7 +32,7 @@ export const useAuth = (): AuthContextValue => {
 };
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5200';
-const SESSION_EXPIRED_EVENT = 'sunrion-session-expired';
+const SESSION_EXPIRED_EVENT = 'betqueen-session-expired';
 
 // Same shape as apps/backoffice-web's apiFetch - see that file's
 // AuthContext.tsx for the 401 -> session-expired-event rationale, learned

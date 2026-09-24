@@ -86,7 +86,7 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgresql://player_api_app:${SERVICE_DB_PASSWORD_PLAYER_API:?SERVICE_DB_PASSWORD_PLAYER_API is required}@postgres:5432/backoffice_api
       PLAYER_JWT_SECRET: ${PLAYER_JWT_SECRET:?PLAYER_JWT_SECRET is required}
-      CORS_ORIGIN: ${PLAYER_WEB_ORIGIN:-https://sunrion.online}
+      CORS_ORIGIN: ${PLAYER_WEB_ORIGIN:-https://betqueen.live}
     # 127.0.0.1-only - same cloudflared-over-loopback reasoning as
     # backoffice-api.
     ports:
@@ -99,7 +99,7 @@ services:
       context: .
       dockerfile: apps/player-web/Dockerfile
       args:
-        REACT_APP_API_URL: ${PLAYER_WEB_API_URL:-https://api.sunrion.online}
+        REACT_APP_API_URL: ${PLAYER_WEB_API_URL:-https://api.betqueen.live}
     restart: unless-stopped
     ports:
       - "127.0.0.1:6300:80"

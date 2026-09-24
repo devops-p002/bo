@@ -17,7 +17,7 @@ const schema = z.object({
   // apps/player-web is a plain Vite SPA with no server of its own,
   // served from a different subdomain than this API - same reasoning as
   // backoffice-api's CORS_ORIGIN.
-  CORS_ORIGIN: nonEmptyString.default('https://sunrion.online'),
+  CORS_ORIGIN: nonEmptyString.default('https://betqueen.live'),
 });
 
 export type PlayerApiConfig = z.infer<typeof schema>;

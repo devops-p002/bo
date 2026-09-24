@@ -6,7 +6,7 @@ import { listGames } from '../services/api/games';
 import type { Game } from '../services/api/games';
 
 const SECTION_TITLES: Record<Game['category'], string> = {
-  ORIGINALS: 'Sunrion Originals',
+  ORIGINALS: 'BetQueen Originals',
   SLOTS: 'Slots',
   LIVE_CASINO: 'Live Casino',
   GAME_SHOWS: 'Game Shows',
@@ -38,7 +38,7 @@ export default function Home() {
     <div className="space-y-8">
       <div className="rounded-xl bg-gradient-to-r from-surface-800 via-surface-700 to-surface-800 border border-surface-600 p-6 sm:p-10">
         <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
-          Welcome to <span className="text-accent-400">Sunrion</span>
+          Welcome to <span className="text-accent-400">BetQueen</span>
         </h1>
         <p className="mt-2 text-surface-50/70 max-w-xl">
           Browse the catalog, manage your wallet, and get set up for real play.

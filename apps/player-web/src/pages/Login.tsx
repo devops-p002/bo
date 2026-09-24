@@ -29,7 +29,7 @@ export default function Login() {
     <div className="max-w-sm mx-auto">
       <div className="card p-6">
         <h1 className="text-xl font-bold mb-1">Log in</h1>
-        <p className="text-sm text-surface-50/50 mb-5">Welcome back to Sunrion.</p>
+        <p className="text-sm text-surface-50/50 mb-5">Welcome back to BetQueen.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
