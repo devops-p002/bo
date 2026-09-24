@@ -18,6 +18,11 @@ function toPlayerShape(row: {
   vip_level: string;
   balance: string;
   bonus_balance: string;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  date_of_birth: Date | null;
+  country: string | null;
 }) {
   return {
     id: row.id,
@@ -28,6 +33,11 @@ function toPlayerShape(row: {
     vipLevel: row.vip_level,
     balance: toNumber(row.balance),
     bonusBalance: toNumber(row.bonus_balance),
+    firstName: row.first_name,
+    lastName: row.last_name,
+    phone: row.phone,
+    dateOfBirth: row.date_of_birth ? row.date_of_birth.toISOString().slice(0, 10) : null,
+    country: row.country,
   };
 }
 
@@ -61,17 +71,55 @@ export interface RequestTransactionInput {
   paymentMethod?: string | undefined;
 }
 
+export interface UpdateProfileInput {
+  firstName?: string | undefined;
+  lastName?: string | undefined;
+  phone?: string | undefined;
+  dateOfBirth?: string | undefined;
+  country?: string | undefined;
+}
+
+const PLAYER_SHAPE_COLUMNS = [
+  'id',
+  'username',
+  'email',
+  'currency',
+  'status',
+  'vip_level',
+  'balance',
+  'bonus_balance',
+  'first_name',
+  'last_name',
+  'phone',
+  'date_of_birth',
+  'country',
+] as const;
+
 export class WalletService {
   constructor(private readonly db: Kysely<Database>) {}
 
   async getWallet(playerId: string) {
-    const row = await this.db
-      .selectFrom('players')
-      .select(['id', 'username', 'email', 'currency', 'status', 'vip_level', 'balance', 'bonus_balance'])
-      .where('id', '=', playerId)
-      .executeTakeFirst();
+    const row = await this.db.selectFrom('players').select(PLAYER_SHAPE_COLUMNS).where('id', '=', playerId).executeTakeFirst();
     if (!row) throw new NotFoundError(`Player ${playerId} not found`);
     return toPlayerShape(row);
+  }
+
+  // Registration is deliberately light (email+username+password only -
+  // see registerSchema) - this is how a player fills in the rest, on
+  // their own "Complete your profile" page, whenever they choose to.
+  async updateProfile(playerId: string, input: UpdateProfileInput) {
+    await this.db
+      .updateTable('players')
+      .set({
+        first_name: input.firstName,
+        last_name: input.lastName,
+        phone: input.phone,
+        date_of_birth: input.dateOfBirth,
+        country: input.country,
+      })
+      .where('id', '=', playerId)
+      .execute();
+    return this.getWallet(playerId);
   }
 
   // Deposits and withdrawals both start PENDING - neither touches

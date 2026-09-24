@@ -1,11 +1,11 @@
-import { Body, Controller, Get, Inject, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { PLAYER_API_CONFIG } from '../config.js';
 import type { PlayerApiConfig } from '../config.js';
 import { PlayerAuthService } from '../player-auth.service.js';
 import { WalletService } from '../wallet.service.js';
-import type { LoginDto, RegisterDto } from './dto.js';
-import { loginSchema, registerSchema } from './dto.js';
+import type { LoginDto, RegisterDto, UpdateProfileDto } from './dto.js';
+import { loginSchema, registerSchema, updateProfileSchema } from './dto.js';
 import type { AuthenticatedPlayerRequest } from './jwt-auth.guard.js';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
 import { SESSION_COOKIE_NAME } from './tokens.js';
@@ -47,6 +47,12 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async me(@Req() req: AuthenticatedPlayerRequest) {
     return this.wallet.getWallet(req.playerId!);
+  }
+
+  @Patch('me')
+  @UseGuards(JwtAuthGuard)
+  async updateMe(@Req() req: AuthenticatedPlayerRequest, @Body(new ZodValidationPipe(updateProfileSchema)) body: UpdateProfileDto) {
+    return this.wallet.updateProfile(req.playerId!, body);
   }
 
   private setSessionCookie(reply: FastifyReply, accessToken: string) {

@@ -7,6 +7,8 @@ const PlayerId = defineId('PlayerId');
 
 export interface PlayerListFilter {
   search?: string | undefined;
+  fullName?: string | undefined;
+  phone?: string | undefined;
   status?: PlayerStatus | undefined;
   vipLevel?: PlayerVipLevel | undefined;
   dateRange?: { start: string; end: string } | undefined;
@@ -107,6 +109,16 @@ export class PlayersService {
       const term = `%${filter.search}%`;
       query = query.where((eb) => eb.or([eb('username', 'ilike', term), eb('email', 'ilike', term)]));
       countQuery = countQuery.where((eb) => eb.or([eb('username', 'ilike', term), eb('email', 'ilike', term)]));
+    }
+    if (filter.fullName) {
+      const term = `%${filter.fullName}%`;
+      query = query.where((eb) => eb.or([eb('first_name', 'ilike', term), eb('last_name', 'ilike', term)]));
+      countQuery = countQuery.where((eb) => eb.or([eb('first_name', 'ilike', term), eb('last_name', 'ilike', term)]));
+    }
+    if (filter.phone) {
+      const term = `%${filter.phone}%`;
+      query = query.where('phone', 'ilike', term);
+      countQuery = countQuery.where('phone', 'ilike', term);
     }
     if (filter.status) {
       query = query.where('status', '=', filter.status);

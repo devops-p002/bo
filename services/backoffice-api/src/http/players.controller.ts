@@ -20,6 +20,8 @@ export class PlayersController {
   async list(@Query(new ZodValidationPipe(listPlayersQuerySchema)) query: ListPlayersQueryDto) {
     const filter = {
       search: query.search,
+      fullName: query.fullName,
+      phone: query.phone,
       status: query.status,
       vipLevel: query.vipLevel,
       dateRange: query.dateRangeStart && query.dateRangeEnd ? { start: query.dateRangeStart, end: query.dateRangeEnd } : undefined,

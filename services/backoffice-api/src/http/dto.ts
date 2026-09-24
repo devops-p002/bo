@@ -45,6 +45,8 @@ const PLAYER_VIP_LEVELS = ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND'] as
 
 export const listPlayersQuerySchema = z.object({
   search: z.string().trim().min(1).optional(),
+  fullName: z.string().trim().min(1).optional(),
+  phone: z.string().trim().min(1).optional(),
   status: z.enum(PLAYER_STATUSES).optional(),
   vipLevel: z.enum(PLAYER_VIP_LEVELS).optional(),
   dateRangeStart: z.string().datetime().optional(),

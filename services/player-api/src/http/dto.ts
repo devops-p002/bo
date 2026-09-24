@@ -13,6 +13,18 @@ export const loginSchema = z.object({
 });
 export type LoginDto = z.infer<typeof loginSchema>;
 
+// Registration stays email+username+password only (light signup) -
+// profile fields are filled in later, here, via the player's own
+// "Complete your profile" page.
+export const updateProfileSchema = z.object({
+  firstName: z.string().trim().min(1).max(100).optional(),
+  lastName: z.string().trim().min(1).max(100).optional(),
+  phone: z.string().trim().min(1).max(32).optional(),
+  dateOfBirth: z.string().date().optional(),
+  country: z.string().trim().length(2).optional(),
+});
+export type UpdateProfileDto = z.infer<typeof updateProfileSchema>;
+
 export const requestTransactionSchema = z.object({
   amount: z.number().positive(),
   currency: z.string().trim().length(3).optional(),

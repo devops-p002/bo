@@ -8,6 +8,7 @@ import GameDetail from './pages/GameDetail';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Wallet from './pages/Wallet';
+import Profile from './pages/Profile';
 
 export default function App() {
   return (
@@ -25,6 +26,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Wallet />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
                 </ProtectedRoute>
               }
             />

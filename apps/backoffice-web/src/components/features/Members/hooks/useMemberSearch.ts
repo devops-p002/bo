@@ -333,15 +333,18 @@ export const useMemberSearch = () => {
 
   // Builds the real filter this app's REST API accepts (services/backoffice-api's
   // GET /players). Fields with no backend equivalent (lastDepositSince,
-  // lastBetTimeSince, noLoginSince, lastLoginIP, phoneNumber(Type),
+  // lastBetTimeSince, noLoginSince, lastLoginIP, phoneNumberType,
   // dateOfBirthFrom/To, lastLoginSince, searchType, currencyType,
-  // channelType, channelCode, fullName) are ignored here - they're
-  // disabled in AccountSearchForm so the UI doesn't pretend they filter
-  // anything.
+  // channelType, channelCode) are ignored here - they're disabled in
+  // AccountSearchForm so the UI doesn't pretend they filter anything.
+  // fullName/phone now match real columns (see players.service.ts) now
+  // that apps/player-web's "Complete your profile" page can populate them.
   const buildFilter = () => {
     const filter: any = {};
     const search = searchData.username?.trim() || searchData.email?.trim();
     if (search) filter.search = search;
+    if (searchData.fullName?.trim()) filter.fullName = searchData.fullName.trim();
+    if (searchData.phoneNumber?.trim()) filter.phone = searchData.phoneNumber.trim();
     if (searchData.accountStatus && searchData.accountStatus !== 'All') {
       filter.status = searchData.accountStatus;
     }

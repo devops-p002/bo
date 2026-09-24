@@ -30,22 +30,21 @@ const AccountSearchForm = ({
         />
       </div>
 
-      {/* Full Name - no backend filter for this (UserFilterInput has no
-          name field; the generic `search` filter only matches
-          username/email/firstName/lastName, and is already used by the
-          Username/Email fields below) */}
+      {/* Full Name - matches players.first_name/last_name (see
+          players.service.ts). Real data only for players who've filled in
+          apps/player-web's "Complete your profile" page - registration
+          itself stays email+username+password only. */}
       <div>
         <label className={`block text-xs font-medium mb-1 ${
           isDarkTheme ? 'text-gray-300' : 'text-gray-700'
         }`}>
-          Full Name <span className="italic font-normal">(not supported by backend)</span>
+          Full Name
         </label>
         <input
           type="text"
           value={searchData.fullName}
           onChange={(e) => onInputChange('fullName', e.target.value)}
-          disabled
-          className={`w-full px-2 py-1 text-xs border rounded-md cursor-not-allowed opacity-50 ${
+          className={`w-full px-2 py-1 text-xs border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
             isDarkTheme
               ? 'bg-gray-700 border-gray-600 text-gray-300'
               : 'bg-white border-gray-300'
@@ -164,19 +163,21 @@ const AccountSearchForm = ({
         />
       </div>
 
-      {/* Phone Number - no backend filter for phone (not in
-          UserFilterInput, and the `search` filter doesn't match it) */}
+      {/* Phone Number - matches players.phone (see players.service.ts).
+          phoneNumberType stays disabled - there's no Mobile/Landline
+          distinction on that column, just a single free-text field. */}
       <div>
         <label className={`block text-xs font-medium mb-1 ${
           isDarkTheme ? 'text-gray-300' : 'text-gray-700'
         }`}>
-          Phone Number <span className="italic font-normal">(not supported by backend)</span>
+          Phone Number
         </label>
         <div className="flex space-x-1">
           <select
             value={searchData.phoneNumberType}
             onChange={(e) => onInputChange('phoneNumberType', e.target.value)}
             disabled
+            title="Not supported by backend - phone has no Mobile/Landline distinction"
             className={`px-2 py-1 text-xs border rounded-md cursor-not-allowed opacity-50 ${
               isDarkTheme
                 ? 'bg-gray-700 border-gray-600 text-gray-300'
@@ -191,8 +192,7 @@ const AccountSearchForm = ({
             type="text"
             value={searchData.phoneNumber}
             onChange={(e) => onInputChange('phoneNumber', e.target.value)}
-            disabled
-            className={`flex-1 px-2 py-1 text-xs border rounded-md cursor-not-allowed opacity-50 ${
+            className={`flex-1 px-2 py-1 text-xs border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
               isDarkTheme
                 ? 'bg-gray-700 border-gray-600 text-gray-300'
                 : 'bg-white border-gray-300'

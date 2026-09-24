@@ -8,6 +8,34 @@ import ProviderAccountSearchForm from '../../components/features/Members/compone
 import ColumnVisibilityDropdown from '../../components/features/Members/components/SearchForms/ColumnVisibilityDropdown';
 import SearchResultsTable from '../../components/features/Members/components/SearchForms/SearchResultsTable';
 
+// Same numbered-pagination shape as the Dashboard drill-down pages
+// (DepositDetailsPage etc.) - 1 ... currentPage-2..currentPage+2 ... last.
+const getPaginationNumbers = (currentPage: number, totalPages: number) => {
+  const delta = 2;
+  const range: number[] = [];
+  const rangeWithDots: (number | string)[] = [];
+
+  for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+    range.push(i);
+  }
+
+  if (currentPage - delta > 2) {
+    rangeWithDots.push(1, '...');
+  } else {
+    rangeWithDots.push(1);
+  }
+
+  rangeWithDots.push(...range);
+
+  if (currentPage + delta < totalPages - 1) {
+    rangeWithDots.push('...', totalPages);
+  } else if (totalPages > 1) {
+    rangeWithDots.push(totalPages);
+  }
+
+  return rangeWithDots;
+};
+
 const MemberSearchPage = () => {
   const { isDarkTheme } = useTheme();
   
@@ -232,7 +260,7 @@ const MemberSearchPage = () => {
                 : `Showing ${(currentPage - 1) * recordsPerPage + 1} to ${Math.min(currentPage * recordsPerPage, totalCount)} of ${totalCount} entries`)
               : 'Showing 1 to 5 of 5 entries (sample data)'}
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
             <button
               onClick={() => goToPage(currentPage - 1)}
               disabled={activeTab !== 'Account' || currentPage <= 1}
@@ -246,8 +274,33 @@ const MemberSearchPage = () => {
                     : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
               }`}
             >
-              Previous
+              ← Previous
             </button>
+
+            {activeTab === 'Account' &&
+              getPaginationNumbers(currentPage, totalPages).map((page, index) => (
+                <button
+                  key={index}
+                  onClick={() => typeof page === 'number' && goToPage(page)}
+                  disabled={page === '...'}
+                  className={`px-2 py-1 text-xs border rounded-md transition-colors ${
+                    page === currentPage
+                      ? isDarkTheme
+                        ? 'bg-blue-600 border-blue-600 text-white'
+                        : 'bg-blue-500 border-blue-500 text-white'
+                      : page === '...'
+                        ? isDarkTheme
+                          ? 'bg-gray-800 border-gray-700 text-gray-600 cursor-default'
+                          : 'bg-gray-100 border-gray-200 text-gray-400 cursor-default'
+                        : isDarkTheme
+                          ? 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+                          : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+
             <button
               onClick={() => goToPage(currentPage + 1)}
               disabled={activeTab !== 'Account' || currentPage >= totalPages}
@@ -261,7 +314,7 @@ const MemberSearchPage = () => {
                     : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
               }`}
             >
-              Next
+              Next →
             </button>
           </div>
         </div>

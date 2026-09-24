@@ -81,7 +81,14 @@ export default function Layout({ children }: { children: ReactNode }) {
                 Wallet
               </button>
               <div className="hidden md:flex items-center gap-2 pl-2 border-l border-surface-600">
-                <span className="text-sm text-surface-50/70">{user.username || user.email}</span>
+                <button
+                  className="text-sm text-surface-50/70 hover:text-surface-50"
+                  onClick={() => navigate('/profile')}
+                  title={user.firstName ? undefined : 'Complete your profile'}
+                >
+                  {user.username || user.email}
+                  {!user.firstName && <span className="ml-1 text-accent-400">•</span>}
+                </button>
                 <button className="text-xs text-surface-50/50 hover:text-surface-50" onClick={logout}>
                   Log out
                 </button>

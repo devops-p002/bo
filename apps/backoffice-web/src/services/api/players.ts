@@ -2,6 +2,8 @@ import { apiFetch } from '../../context/AuthContext';
 
 export interface PlayerListFilter {
   search?: string;
+  fullName?: string;
+  phone?: string;
   status?: string;
   vipLevel?: string;
   dateRangeStart?: string;
@@ -24,6 +26,8 @@ async function parseOrThrow(response: Response) {
 export async function listPlayers(filter: PlayerListFilter, pagination: PlayerListPagination) {
   const params = new URLSearchParams();
   if (filter.search) params.set('search', filter.search);
+  if (filter.fullName) params.set('fullName', filter.fullName);
+  if (filter.phone) params.set('phone', filter.phone);
   if (filter.status) params.set('status', filter.status);
   if (filter.vipLevel) params.set('vipLevel', filter.vipLevel);
   if (filter.dateRangeStart) params.set('dateRangeStart', filter.dateRangeStart);

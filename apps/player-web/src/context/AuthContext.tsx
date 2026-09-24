@@ -11,6 +11,19 @@ export interface Wallet {
   vipLevel: string;
   balance: number;
   bonusBalance: number;
+  firstName: string | null;
+  lastName: string | null;
+  phone: string | null;
+  dateOfBirth: string | null;
+  country: string | null;
+}
+
+export interface ProfileUpdateInput {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  dateOfBirth?: string;
+  country?: string;
 }
 
 interface AuthContextValue {
@@ -20,6 +33,7 @@ interface AuthContextValue {
   register: (email: string, password: string, username?: string) => Promise<void>;
   logout: () => void;
   refreshWallet: () => Promise<void>;
+  updateProfile: (input: ProfileUpdateInput) => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -109,6 +123,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     navigate('/login');
   };
 
+  const updateProfile = async (input: ProfileUpdateInput) => {
+    const response = await apiFetch('/auth/me', { method: 'PATCH', body: JSON.stringify(input) });
+    await parseOrThrow(response);
+    await refreshWallet();
+  };
+
   const value: AuthContextValue = {
     user,
     loading,
@@ -116,6 +136,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     register,
     logout,
     refreshWallet,
+    updateProfile,
     isAuthenticated: !!user,
   };
 
