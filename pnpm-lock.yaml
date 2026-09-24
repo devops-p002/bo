@@ -8,12 +8,24 @@ importers:
 
   .:
     devDependencies:
+      '@eslint/js':
+        specifier: ^9.28.0
+        version: 9.39.5
+      eslint:
+        specifier: ^9.28.0
+        version: 9.39.5(jiti@1.21.7)
+      globals:
+        specifier: ^15.14.0
+        version: 15.15.0
       turbo:
         specifier: ^2.3.3
         version: 2.11.3
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
+      typescript-eslint:
+        specifier: ^8.19.0
+        version: 8.70.1(eslint@9.39.5(jiti@1.21.7))(typescript@5.9.3)
 
   apps/backoffice-web:
     dependencies:

@@ -12,7 +12,34 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Fast, infra-free gate: lint + typecheck every package (turbo, so only
+  # what actually changed plus its dependents re-runs). Deliberately NOT
+  # `pnpm test` here - backoffice-api's own integration suite boots real
+  # ledger and account servers as dependencies (see its test/setup.ts),
+  # and neither service exists in this repo yet. Revisit once that's
+  # decided one way or the other.
+  verify:
+    name: lint & typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+
   deploy:
+    needs: verify
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
