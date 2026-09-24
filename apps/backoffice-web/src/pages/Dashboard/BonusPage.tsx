@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import { useTheme } from '../../context/ThemeContext';
+import { Breadcrumb } from '../../components/common/UI';
 import { useSearchParams } from 'react-router-dom';
 
 // NOTE: Query.bonuses only accepts `pagination`, not a `filter`/`dateRange`
@@ -152,6 +153,9 @@ const BonusPage = () => {
   return (
     <div className={`min-h-screen ${isDarkTheme ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
       <div className="p-3 max-w-7xl mx-auto">
+        <div className="mb-3">
+          <Breadcrumb />
+        </div>
         {/* Header */}
         <div className="text-center mb-4">
           <h1 className={`text-lg font-medium ${isDarkTheme ? 'text-gray-300' : 'text-gray-600'}`}>

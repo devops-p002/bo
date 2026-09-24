@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Button } from '../../components/common/UI';
+import { Card, Button, Breadcrumb } from '../../components/common/UI';
+import { useTheme } from '../../context/ThemeContext';
 import MemberProfile from '../../components/features/Members/components/MemberProfile';
 
 // NOTE: the route is `/members/:id` (see src/config/routes.js), so useParams()
@@ -33,6 +34,7 @@ const GET_MEMBER_DETAILS = gql`
 const formatCurrency = (n) => `$${(n ?? 0).toLocaleString()}`;
 
 const MemberDetailsPage = () => {
+  const { isDarkTheme } = useTheme();
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
@@ -124,11 +126,16 @@ const MemberDetailsPage = () => {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className={`p-3 ${isDarkTheme ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
+        <div className="mb-3">
+          <Breadcrumb />
+        </div>
+        <div className="space-y-6">
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded mb-4 w-1/3"></div>
           <div className="h-32 bg-gray-200 rounded mb-6"></div>
           <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
         </div>
       </div>
     );
@@ -136,7 +143,11 @@ const MemberDetailsPage = () => {
 
   if (error || !member) {
     return (
-      <div className="space-y-6">
+      <div className={`p-3 ${isDarkTheme ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
+        <div className="mb-3">
+          <Breadcrumb />
+        </div>
+        <div className="space-y-6">
         <div className="flex items-center justify-between">
           <Button variant="secondary" onClick={handleBack}>
             ← Back to Members
@@ -153,12 +164,17 @@ const MemberDetailsPage = () => {
             Return to Members List
           </Button>
         </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className={`p-3 ${isDarkTheme ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
+      <div className="mb-3">
+        <Breadcrumb />
+      </div>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
@@ -233,6 +249,7 @@ const MemberDetailsPage = () => {
 
       {/* Tab Content */}
       {renderTabContent()}
+      </div>
     </div>
   );
 };

@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Card } from '../../common/UI';
+import { Card, Breadcrumb } from '../../common/UI';
+import { useTheme } from '../../../context/ThemeContext';
 import MemberTrace from './components/MemberTrace';
 import MemberAnalysis from './components/MemberAnalysis';
 import HighRollerMonitoring from './components/HighRollerMonitoring';
@@ -17,6 +18,7 @@ const TAB_BY_PATH = {
 };
 
 const Risk = () => {
+  const { isDarkTheme } = useTheme();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(TAB_BY_PATH[location.pathname] || 'alerts');
 
@@ -45,7 +47,11 @@ const Risk = () => {
   const flaggedActivityCount = highRiskBets.length + highRiskTransactions.length;
 
   return (
-    <div className="space-y-6">
+    <div className={`p-3 ${isDarkTheme ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
+      <div className="mb-3">
+        <Breadcrumb />
+      </div>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -161,6 +167,7 @@ const Risk = () => {
 
       {/* Active Tab Content */}
       <ActiveComponent />
+      </div>
     </div>
   );
 };

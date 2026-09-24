@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '../../context/ThemeContext';
+import { Breadcrumb } from '../../components/common/UI';
 
 const OnlineUsersPage = () => {
   const { isDarkTheme } = useTheme();
@@ -205,6 +206,9 @@ const OnlineUsersPage = () => {
   return (
     <div className={`min-h-screen ${isDarkTheme ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
       <div className="p-3 max-w-7xl mx-auto">
+        <div className="mb-3">
+          <Breadcrumb />
+        </div>
         {/* Header */}
         <div className="text-center mb-4">
           <h1 className={`text-lg font-medium ${isDarkTheme ? 'text-gray-300' : 'text-gray-600'}`}>

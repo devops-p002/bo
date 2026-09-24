@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Card } from '../../common/UI';
+import { Card, Breadcrumb } from '../../common/UI';
+import { useTheme } from '../../../context/ThemeContext';
 import MessageCenter from './components/MessageCenter';
 import CustomerService from './components/CustomerService';
 import ChatInterface from './components/ChatInterface';
@@ -7,6 +8,7 @@ import TicketManager from './components/TicketManager';
 import useCRM from './hooks/useCRM';
 
 const CRM = () => {
+  const { isDarkTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('tickets');
   const { loading, error, getTicketStats } = useCRM();
   const [stats, setStats] = React.useState(null);
@@ -38,7 +40,11 @@ const CRM = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className={`p-3 ${isDarkTheme ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
+      <div className="mb-3">
+        <Breadcrumb />
+      </div>
+      <div className="space-y-4">
       <Card>
         <div className="p-4">
           <h2 className="text-xl font-semibold mb-4">CRM Dashboard</h2>
@@ -102,8 +108,9 @@ const CRM = () => {
           </div>
         </div>
       </Card>
+      </div>
     </div>
   );
 };
 
-export default CRM; 
+export default CRM;

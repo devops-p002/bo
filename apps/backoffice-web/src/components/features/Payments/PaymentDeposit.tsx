@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { gql, useQuery, useMutation } from '@apollo/client';
-import { Card } from '../../common/UI';
+import { Card, Breadcrumb } from '../../common/UI';
+import { useTheme } from '../../../context/ThemeContext';
 
 const GET_DEPOSITS = gql`
   query PaymentDepositList {
@@ -41,6 +42,7 @@ const STATUS_LABELS = {
 };
 
 const PaymentDeposit = () => {
+  const { isDarkTheme } = useTheme();
   const { data, loading, error, refetch } = useQuery(GET_DEPOSITS, { fetchPolicy: 'cache-and-network' });
   const [approveTransaction] = useMutation(APPROVE_TRANSACTION);
   const [rejectTransaction] = useMutation(REJECT_TRANSACTION);
@@ -78,7 +80,11 @@ const PaymentDeposit = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className={`p-3 ${isDarkTheme ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
+      <div className="mb-3">
+        <Breadcrumb />
+      </div>
+      <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold text-gray-900">Deposit Management</h1>
         <p className="mt-1 text-sm text-gray-600">
@@ -192,6 +198,7 @@ const PaymentDeposit = () => {
           </div>
         </div>
       </Card>
+      </div>
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Card } from '../../common/UI';
+import { Card, Breadcrumb } from '../../common/UI';
+import { useTheme } from '../../../context/ThemeContext';
 import StaffManagement from './components/StaffManagement';
 import SystemSettings from './components/SystemSettings';
 import PermissionSettings from './components/PermissionSettings';
@@ -7,6 +8,7 @@ import GameSettings from './components/GameSettings';
 import GeneralSettings from './components/GeneralSettings';
 
 const Settings = () => {
+  const { isDarkTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('general');
 
   const tabs = [
@@ -60,7 +62,11 @@ const Settings = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className={`p-3 ${isDarkTheme ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
+      <div className="mb-3">
+        <Breadcrumb />
+      </div>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -104,8 +110,9 @@ const Settings = () => {
       <div className="min-h-[600px]">
         {renderTabContent()}
       </div>
+      </div>
     </div>
   );
 };
 
-export default Settings; 
+export default Settings;

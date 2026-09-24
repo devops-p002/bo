@@ -1,5 +1,6 @@
 import React from 'react';
-import { Card } from '../../common/UI';
+import { Card, Breadcrumb } from '../../common/UI';
+import { useTheme } from '../../../context/ThemeContext';
 import {
   BonusReport,
   PaymentReport,
@@ -11,6 +12,7 @@ import {
 } from './components';
 
 const Reports = () => {
+  const { isDarkTheme } = useTheme();
   const [activeReport, setActiveReport] = React.useState('daily');
   const [filters, setFilters] = React.useState({
     startDate: '',
@@ -41,7 +43,11 @@ const Reports = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className={`p-3 ${isDarkTheme ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
+      <div className="mb-3">
+        <Breadcrumb />
+      </div>
+      <div className="space-y-6">
       <Card>
         <ReportFilters
           filters={filters}
@@ -51,8 +57,9 @@ const Reports = () => {
         />
       </Card>
       {renderReport()}
+      </div>
     </div>
   );
 };
 
-export default Reports; 
+export default Reports;

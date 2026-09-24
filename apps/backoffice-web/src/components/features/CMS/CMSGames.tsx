@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { gql, useQuery, useMutation } from '@apollo/client';
 import ComponentTemplate from '../ComponentTemplate';
-import { Modal, Button } from '../../common/UI';
+import { Modal, Button, Breadcrumb } from '../../common/UI';
+import { useTheme } from '../../../context/ThemeContext';
 import { Input, Select } from '../../common/Forms';
 
 const GET_GAMES = gql`
@@ -53,6 +54,7 @@ const CATEGORY_OPTIONS = [
 const EMPTY_FORM = { name: '', provider: '', category: 'SLOTS' };
 
 const CMSGames = () => {
+  const { isDarkTheme } = useTheme();
   const { data, loading, error, refetch } = useQuery(GET_GAMES, { fetchPolicy: 'cache-and-network' });
   const [createGame] = useMutation(CREATE_GAME);
   const [updateGame] = useMutation(UPDATE_GAME);
@@ -136,7 +138,10 @@ const CMSGames = () => {
   ];
 
   return (
-    <>
+    <div className={`p-3 ${isDarkTheme ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
+      <div className="mb-3">
+        <Breadcrumb />
+      </div>
       <ComponentTemplate
         title="Game Management"
         description="Manage all games, providers, and categories available on the platform"
@@ -190,7 +195,7 @@ const CMSGames = () => {
           />
         </div>
       </Modal>
-    </>
+    </div>
   );
 };
 

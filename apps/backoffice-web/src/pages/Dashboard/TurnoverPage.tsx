@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import { useTheme } from '../../context/ThemeContext';
+import { Breadcrumb } from '../../components/common/UI';
 import { useSearchParams } from 'react-router-dom';
 
 // userBettingLeaderboard returns a plain [UserBettingSummary!]! array, not a
@@ -125,6 +126,9 @@ const TurnoverPage = () => {
   return (
     <div className={`min-h-screen ${isDarkTheme ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
       <div className="container mx-auto p-4">
+        <div className="mb-3">
+          <Breadcrumb />
+        </div>
         {/* Page Title */}
         <div className="text-center mb-4">
           <h1 className={`text-lg font-medium ${isDarkTheme ? 'text-gray-300' : 'text-gray-600'}`}>

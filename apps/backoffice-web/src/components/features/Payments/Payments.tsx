@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
-import { Card } from '../../common/UI';
+import { Card, Breadcrumb } from '../../common/UI';
+import { useTheme } from '../../../context/ThemeContext';
 import DepositList from './components/DepositList';
 import WithdrawalList from './components/WithdrawalList';
 import PaymentMethods from './components/PaymentMethods';
@@ -19,6 +20,7 @@ const GET_PAYMENT_STATS = gql`
 `;
 
 const Payments = () => {
+  const { isDarkTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('deposits');
   const { data: statsData, loading: statsLoading } = useQuery(GET_PAYMENT_STATS, { fetchPolicy: 'cache-and-network' });
   const stats = statsData?.dashboardStats;
@@ -86,7 +88,11 @@ const Payments = () => {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className={`p-3 ${isDarkTheme ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
+      <div className="mb-3">
+        <Breadcrumb />
+      </div>
+      <div className="space-y-4">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Payments Management</h1>
         <div className="flex space-x-2">
@@ -172,8 +178,9 @@ const Payments = () => {
           </div>
         </div>
       </Card>
+      </div>
     </div>
   );
 };
 
-export default Payments; 
+export default Payments;

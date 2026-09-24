@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Card, Button, Modal } from '../../../common/UI';
+import { Card, Button, Modal, Breadcrumb } from '../../../common/UI';
 import { Input, Select } from '../../../common/Forms';
+import { useTheme } from '../../../../context/ThemeContext';
 import { BetLimitSettings, BetSettlement, BettingPatterns, PendingBets, BetHistory } from '../components';
 import useBets from '../hooks/useBets';
 
@@ -17,6 +18,7 @@ const TAB_BY_PATH = {
 const formatMoney = (value) => `$${Number(value ?? 0).toLocaleString()}`;
 
 const BetsPage = () => {
+  const { isDarkTheme } = useTheme();
   const { pendingBets, bets, betsTotalCount, settleBet, refetch } = useBets();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(TAB_BY_PATH[location.pathname] || 'pending');
@@ -83,7 +85,11 @@ const BetsPage = () => {
   const totalVolume = bets.reduce((sum, b) => sum + (b.amount || 0), 0);
 
   return (
-    <div className="space-y-6">
+    <div className={`p-3 ${isDarkTheme ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
+      <div className="mb-3">
+        <Breadcrumb />
+      </div>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -278,6 +284,7 @@ const BetsPage = () => {
           </div>
         )}
       </Modal>
+      </div>
     </div>
   );
 };

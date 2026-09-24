@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Card } from '../../common/UI';
+import { Card, Breadcrumb } from '../../common/UI';
+import { useTheme } from '../../../context/ThemeContext';
 import CommissionReport from './components/CommissionReport';
 import ReferralReport from './components/ReferralReport';
 import ReferralTree from './components/ReferralTree';
 import CommissionSettings from './components/CommissionSettings';
 
 const Referral = () => {
+  const { isDarkTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('overview');
 
   const tabs = [
@@ -278,7 +280,11 @@ const Referral = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <div className={`p-3 ${isDarkTheme ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
+      <div className="mb-3">
+        <Breadcrumb />
+      </div>
+      <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -311,8 +317,9 @@ const Referral = () => {
 
       {/* Tab Content */}
       {renderTabContent()}
+      </div>
     </div>
   );
 };
 
-export default Referral; 
+export default Referral;
