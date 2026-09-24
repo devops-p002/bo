@@ -1,0 +1,53 @@
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+# Only one deploy at a time against the VM - a second push landing mid-
+# deploy should wait its turn, not race the first one's `docker compose up`.
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      # actions/checkout's default `clean: true` runs `git clean -ffdx`
+      # before every checkout, which would delete any untracked file left
+      # inside the runner's own working directory - including a secrets
+      # file, if one were kept there. So it isn't: real values
+      # (POSTGRES_ADMIN_PASSWORD, SERVICE_DB_PASSWORD_BACKOFFICE_API,
+      # ADMIN_JWT_SECRET, ...) live in ~/bo-secrets/.env, outside any repo
+      # checkout, created once by hand on the VM and never touched by CI.
+      - name: build images
+        run: docker compose --env-file "$HOME/bo-secrets/.env" -p bo build
+
+      - name: start postgres and wait for it to become healthy
+        run: |
+          set -euo pipefail
+          docker compose --env-file "$HOME/bo-secrets/.env" -p bo up -d postgres
+          for i in $(seq 1 30); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' bo-postgres-1 2>/dev/null || echo starting)
+            if [ "$status" = "healthy" ]; then
+              echo "postgres healthy"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "postgres did not become healthy in time (status: $status)" >&2
+          docker compose -p bo logs postgres
+          exit 1
+
+      - name: run backoffice-api migrations
+        run: docker compose --env-file "$HOME/bo-secrets/.env" -p bo run --rm backoffice-api pnpm migrate:up
+
+      - name: deploy
+        run: docker compose --env-file "$HOME/bo-secrets/.env" -p bo up -d --remove-orphans
+
+      - name: prune old images
+        run: docker image prune -f
