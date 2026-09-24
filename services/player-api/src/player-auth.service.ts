@@ -3,6 +3,7 @@ import { defineId } from '@platform/ids';
 import type { Kysely } from 'kysely';
 import type { Database } from './db/schema.js';
 import { verifyPlayerAccessToken, signPlayerAccessToken } from './jwt.js';
+import { classifyDevice, lookupCountry } from './login-context.js';
 import { hashPassword, verifyPassword } from './password.js';
 
 const PlayerId = defineId('PlayerId');
@@ -33,7 +34,7 @@ export class PlayerAuthService {
     private readonly config: { jwtSecret: string; accessTokenTtlSeconds: number },
   ) {}
 
-  async register(input: RegisterPlayerInput): Promise<PlayerAuthResult> {
+  async register(input: RegisterPlayerInput, ip?: string | undefined, userAgent?: string | undefined): Promise<PlayerAuthResult> {
     const existing = await this.db.selectFrom('players').select('id').where('email', '=', input.email.toLowerCase()).executeTakeFirst();
     if (existing) {
       throw new ConflictError(`An account with email ${input.email} already exists`);
@@ -51,13 +52,14 @@ export class PlayerAuthService {
         currency: 'USD',
         status: 'ACTIVE',
         vip_level: 'BRONZE',
+        ...this.buildLoginContext(ip, userAgent),
       })
       .execute();
 
     return this.startSession(id);
   }
 
-  async login(email: string, password: string, ip?: string | undefined): Promise<PlayerAuthResult> {
+  async login(email: string, password: string, ip?: string | undefined, userAgent?: string | undefined): Promise<PlayerAuthResult> {
     const player = await this.db.selectFrom('players').selectAll().where('email', '=', email.toLowerCase()).executeTakeFirst();
 
     const passwordOk = await verifyPassword(player?.password_hash ?? DUMMY_PASSWORD_HASH, password);
@@ -66,10 +68,24 @@ export class PlayerAuthService {
     }
 
     if (ip) {
-      await this.db.updateTable('players').set({ last_login_at: new Date(), last_login_ip: ip }).where('id', '=', player.id).execute();
+      await this.db.updateTable('players').set(this.buildLoginContext(ip, userAgent)).where('id', '=', player.id).execute();
     }
 
     return this.startSession(player.id);
+  }
+
+  // Shared by register (first login context a player ever has) and login
+  // (refreshed on every subsequent one) - all of it server-captured, never
+  // a client-supplied field. See login-context.ts's own comments on why
+  // IP/UA are the only trustworthy inputs here.
+  private buildLoginContext(ip: string | undefined, userAgent: string | undefined) {
+    return {
+      last_login_at: new Date(),
+      last_login_ip: ip ?? null,
+      last_login_country: lookupCountry(ip),
+      last_login_user_agent: userAgent ?? null,
+      last_login_device: classifyDevice(userAgent),
+    };
   }
 
   async logout(sessionId: string): Promise<void> {

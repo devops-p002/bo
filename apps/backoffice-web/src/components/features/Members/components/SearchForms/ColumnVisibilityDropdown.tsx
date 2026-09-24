@@ -27,6 +27,8 @@ const ColumnVisibilityDropdown = ({
     totalBalance: 'Total Balance',
     lastLoginIp: 'Last Login IP',
     lastLoginTime: 'Last Login Time',
+    lastLoginLocation: 'Last Login Location',
+    lastLoginDevice: 'Last Login Device',
     currencyType: 'Currency Type'
   };
 

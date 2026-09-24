@@ -117,6 +117,9 @@ export interface PlayersTable {
   total_wins: DecimalColumn;
   last_login_at: NullableTimestampColumn;
   last_login_ip: string | null;
+  last_login_country: string | null;
+  last_login_user_agent: string | null;
+  last_login_device: string | null;
   created_at: CreatedAtColumn;
 }
 

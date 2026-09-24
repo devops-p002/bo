@@ -19,9 +19,17 @@ const logger = createLogger('backoffice-api');
 async function bootstrap(): Promise<void> {
   const config = loadBackofficeConfig();
 
-  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter(), {
-    logger: false, // @platform/logging is the logger everywhere in this service
-  });
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    // trustProxy: same reasoning as services/player-api/src/main.ts -
+    // this service is only reached through cloudflared on 127.0.0.1, so
+    // without this req.ip is always the tunnel's loopback address, not
+    // the admin's real IP (audit logs/admin sessions would be useless).
+    new FastifyAdapter({ trustProxy: true }),
+    {
+      logger: false, // @platform/logging is the logger everywhere in this service
+    },
+  );
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await app.register(fastifyCors as any, { origin: config.CORS_ORIGIN, credentials: true });

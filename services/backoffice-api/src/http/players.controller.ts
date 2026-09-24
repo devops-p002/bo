@@ -25,6 +25,9 @@ export class PlayersController {
       status: query.status,
       vipLevel: query.vipLevel,
       dateRange: query.dateRangeStart && query.dateRangeEnd ? { start: query.dateRangeStart, end: query.dateRangeEnd } : undefined,
+      lastLoginIP: query.lastLoginIP,
+      lastLoginSince: query.lastLoginSince,
+      noLoginSince: query.noLoginSince,
     };
     return this.players.list(filter, { page: query.page, limit: query.limit });
   }

@@ -107,34 +107,39 @@ const AccountSearchForm = ({
         />
       </div>
 
-      {/* No Login Since - no backend equivalent (no filter for lastLoginAt) */}
+      {/* No Login Since - filters on last_login_at (players who haven't
+          logged in since this date, or never have). Real: last_login_at
+          is populated on every login by services/player-api's
+          PlayerAuthService and now has a real backend filter for it. */}
       <div>
-        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-          No Login Since <span className="italic font-normal">(not supported by backend)</span>
+        <label className={`block text-xs font-medium mb-1 ${
+          isDarkTheme ? 'text-gray-300' : 'text-gray-700'
+        }`}>
+          No Login Since
         </label>
         <DateTimePicker
           value={searchData.noLoginSince}
           onChange={(date) => onInputChange('noLoginSince', date)}
           placeholder="No Login Since"
-          disabled
-          className="w-full text-xs opacity-50"
+          className="w-full text-xs"
         />
       </div>
 
-      {/* Last Login IP - lastLoginIP is a real column on User, but there's
-          no filter for it in UserFilterInput */}
+      {/* Last Login IP - real column, captured server-side from the login
+          request (never client-reported - see
+          services/player-api/src/main.ts's trustProxy comment for why the
+          server, not the browser, has to be the one deciding this). */}
       <div>
         <label className={`block text-xs font-medium mb-1 ${
           isDarkTheme ? 'text-gray-300' : 'text-gray-700'
         }`}>
-          Last Login IP <span className="italic font-normal">(not supported by backend)</span>
+          Last Login IP
         </label>
         <input
           type="text"
           value={searchData.lastLoginIP}
           onChange={(e) => onInputChange('lastLoginIP', e.target.value)}
-          disabled
-          className={`w-full px-2 py-1 text-xs border rounded-md cursor-not-allowed opacity-50 ${
+          className={`w-full px-2 py-1 text-xs border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
             isDarkTheme
               ? 'bg-gray-700 border-gray-600 text-gray-300'
               : 'bg-white border-gray-300'
@@ -258,19 +263,20 @@ const AccountSearchForm = ({
         </div>
       </div>
 
-      {/* Last Login Since - no backend filter for lastLoginAt */}
+      {/* Last Login Since - filters on last_login_at (players who have
+          logged in on or after this date). Same real column as "No Login
+          Since" above, opposite direction. */}
       <div>
         <label className={`block text-xs font-medium mb-1 ${
           isDarkTheme ? 'text-gray-300' : 'text-gray-700'
         }`}>
-          Last Login Since <span className="italic font-normal">(not supported by backend)</span>
+          Last Login Since
         </label>
         <DateTimePicker
           value={searchData.lastLoginSince}
           onChange={(date) => onInputChange('lastLoginSince', date)}
           placeholder="Last Login Since"
-          disabled
-          className="w-full text-xs opacity-50"
+          className="w-full text-xs"
         />
       </div>
 

@@ -147,6 +147,8 @@ const SearchResultsTable = ({
             {visibleAccountColumns.totalBalance && <th className="px-2 py-2 text-left font-medium border-r border-gray-300">Total Balance</th>}
             {visibleAccountColumns.lastLoginIp && <th className="px-2 py-2 text-left font-medium border-r border-gray-300">Last Login IP</th>}
             {visibleAccountColumns.lastLoginTime && <th className="px-2 py-2 text-left font-medium border-r border-gray-300">Last Login Time</th>}
+            {visibleAccountColumns.lastLoginLocation && <th className="px-2 py-2 text-left font-medium border-r border-gray-300">Last Login Location</th>}
+            {visibleAccountColumns.lastLoginDevice && <th className="px-2 py-2 text-left font-medium border-r border-gray-300">Last Login Device</th>}
             {visibleAccountColumns.currencyType && <th className="px-2 py-2 text-left font-medium">Currency Type</th>}
           </tr>
         </thead>
@@ -181,6 +183,15 @@ const SearchResultsTable = ({
               {visibleAccountColumns.totalBalance && <td className="px-2 py-2 border-r border-gray-300">{(row.balance ?? 0).toLocaleString()}</td>}
               {visibleAccountColumns.lastLoginIp && <td className="px-2 py-2 border-r border-gray-300">{row.lastLoginIP || '-'}</td>}
               {visibleAccountColumns.lastLoginTime && <td className="px-2 py-2 border-r border-gray-300">{formatDateTime(row.lastLoginAt)}</td>}
+              {/* Server-derived from last_login_ip via an offline IP-to-
+                  country lookup at login time - never a client-reported
+                  location. See services/player-api/src/login-context.ts. */}
+              {visibleAccountColumns.lastLoginLocation && <td className="px-2 py-2 border-r border-gray-300">{row.lastLoginCountry || '-'}</td>}
+              {/* Coarse Desktop/Mobile/Tablet/Bot classification from the
+                  login request's User-Agent header - device *type*, not a
+                  unique device *fingerprint*. Same file's comment explains
+                  the distinction. */}
+              {visibleAccountColumns.lastLoginDevice && <td className="px-2 py-2 border-r border-gray-300">{row.lastLoginDevice || '-'}</td>}
               {visibleAccountColumns.currencyType && <td className="px-2 py-2">{row.currency}</td>}
             </tr>
           ))}

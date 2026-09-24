@@ -8,6 +8,9 @@ export interface PlayerListFilter {
   vipLevel?: string;
   dateRangeStart?: string;
   dateRangeEnd?: string;
+  lastLoginIP?: string;
+  lastLoginSince?: string;
+  noLoginSince?: string;
 }
 
 export interface PlayerListPagination {
@@ -32,6 +35,9 @@ export async function listPlayers(filter: PlayerListFilter, pagination: PlayerLi
   if (filter.vipLevel) params.set('vipLevel', filter.vipLevel);
   if (filter.dateRangeStart) params.set('dateRangeStart', filter.dateRangeStart);
   if (filter.dateRangeEnd) params.set('dateRangeEnd', filter.dateRangeEnd);
+  if (filter.lastLoginIP) params.set('lastLoginIP', filter.lastLoginIP);
+  if (filter.lastLoginSince) params.set('lastLoginSince', filter.lastLoginSince);
+  if (filter.noLoginSince) params.set('noLoginSince', filter.noLoginSince);
   params.set('page', String(pagination.page));
   params.set('limit', String(pagination.limit));
 

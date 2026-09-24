@@ -15,9 +15,18 @@ const logger = createLogger('player-api');
 async function bootstrap(): Promise<void> {
   const config = loadPlayerApiConfig();
 
-  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter(), {
-    logger: false, // @platform/logging is the logger everywhere in this service
-  });
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    // trustProxy: this service is only ever reached through cloudflared on
+    // 127.0.0.1 (see docker-compose.yml's port binding) - without this,
+    // req.ip is always the tunnel's own loopback address, not the
+    // player's real IP, so last_login_ip/geolocation would silently
+    // record "127.0.0.1" for every login.
+    new FastifyAdapter({ trustProxy: true }),
+    {
+      logger: false, // @platform/logging is the logger everywhere in this service
+    },
+  );
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await app.register(fastifyCors as any, { origin: config.CORS_ORIGIN, credentials: true });

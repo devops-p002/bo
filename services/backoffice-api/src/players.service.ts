@@ -12,6 +12,9 @@ export interface PlayerListFilter {
   status?: PlayerStatus | undefined;
   vipLevel?: PlayerVipLevel | undefined;
   dateRange?: { start: string; end: string } | undefined;
+  lastLoginIP?: string | undefined;
+  lastLoginSince?: string | undefined;
+  noLoginSince?: string | undefined;
 }
 
 export interface PlayerListPagination {
@@ -70,6 +73,9 @@ function toApiShape(row: {
   total_wins: string;
   last_login_at: Date | null;
   last_login_ip: string | null;
+  last_login_country: string | null;
+  last_login_user_agent: string | null;
+  last_login_device: string | null;
   created_at: Date;
 }) {
   const fullName = [row.first_name, row.last_name].filter(Boolean).join(' ') || row.username || row.email;
@@ -94,6 +100,9 @@ function toApiShape(row: {
     totalWins: toNumber(row.total_wins),
     lastLoginAt: row.last_login_at ? row.last_login_at.toISOString() : null,
     lastLoginIP: row.last_login_ip,
+    lastLoginCountry: row.last_login_country,
+    lastLoginUserAgent: row.last_login_user_agent,
+    lastLoginDevice: row.last_login_device,
     createdAt: row.created_at.toISOString(),
   };
 }
@@ -131,6 +140,24 @@ export class PlayersService {
     if (filter.dateRange) {
       query = query.where('created_at', '>=', new Date(filter.dateRange.start)).where('created_at', '<=', new Date(filter.dateRange.end));
       countQuery = countQuery.where('created_at', '>=', new Date(filter.dateRange.start)).where('created_at', '<=', new Date(filter.dateRange.end));
+    }
+    if (filter.lastLoginIP) {
+      const term = `%${filter.lastLoginIP}%`;
+      query = query.where('last_login_ip', 'ilike', term);
+      countQuery = countQuery.where('last_login_ip', 'ilike', term);
+    }
+    if (filter.lastLoginSince) {
+      const since = new Date(filter.lastLoginSince);
+      query = query.where('last_login_at', '>=', since);
+      countQuery = countQuery.where('last_login_at', '>=', since);
+    }
+    if (filter.noLoginSince) {
+      // "No Login Since <date>" means the player hasn't logged in since
+      // that date - last_login_at is at or before it, or they've never
+      // logged in at all (null).
+      const since = new Date(filter.noLoginSince);
+      query = query.where((eb) => eb.or([eb('last_login_at', 'is', null), eb('last_login_at', '<=', since)]));
+      countQuery = countQuery.where((eb) => eb.or([eb('last_login_at', 'is', null), eb('last_login_at', '<=', since)]));
     }
 
     const totalRow = await countQuery.select((eb) => eb.fn.countAll<string>().as('count')).executeTakeFirstOrThrow();

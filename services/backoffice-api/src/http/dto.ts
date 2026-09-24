@@ -51,6 +51,9 @@ export const listPlayersQuerySchema = z.object({
   vipLevel: z.enum(PLAYER_VIP_LEVELS).optional(),
   dateRangeStart: z.string().datetime().optional(),
   dateRangeEnd: z.string().datetime().optional(),
+  lastLoginIP: z.string().trim().min(1).optional(),
+  lastLoginSince: z.string().datetime().optional(),
+  noLoginSince: z.string().datetime().optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(200).default(20),
 });

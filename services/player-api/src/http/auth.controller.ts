@@ -20,15 +20,19 @@ export class AuthController {
   ) {}
 
   @Post('register')
-  async register(@Body(new ZodValidationPipe(registerSchema)) body: RegisterDto, @Res({ passthrough: true }) reply: FastifyReply) {
-    const result = await this.playerAuth.register(body);
+  async register(
+    @Body(new ZodValidationPipe(registerSchema)) body: RegisterDto,
+    @Req() req: FastifyRequest,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
+    const result = await this.playerAuth.register(body, req.ip, req.headers['user-agent']);
     this.setSessionCookie(reply, result.accessToken);
     return { playerId: result.playerId };
   }
 
   @Post('login')
   async login(@Body(new ZodValidationPipe(loginSchema)) body: LoginDto, @Req() req: FastifyRequest, @Res({ passthrough: true }) reply: FastifyReply) {
-    const result = await this.playerAuth.login(body.email, body.password, req.ip);
+    const result = await this.playerAuth.login(body.email, body.password, req.ip, req.headers['user-agent']);
     this.setSessionCookie(reply, result.accessToken);
     return { playerId: result.playerId };
   }

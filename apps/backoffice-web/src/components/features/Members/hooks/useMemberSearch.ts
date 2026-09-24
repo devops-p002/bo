@@ -23,6 +23,8 @@ const DEFAULT_ACCOUNT_COLUMNS = {
   totalBalance: true,
   lastLoginIp: true,
   lastLoginTime: true,
+  lastLoginLocation: true,
+  lastLoginDevice: true,
   currencyType: true,
 };
 
@@ -70,6 +72,8 @@ const ACCOUNT_COLUMN_LABELS: Record<string, string> = {
   totalBalance: 'Total Balance',
   lastLoginIp: 'Last Login IP',
   lastLoginTime: 'Last Login Time',
+  lastLoginLocation: 'Last Login Location',
+  lastLoginDevice: 'Last Login Device',
   currencyType: 'Currency Type',
 };
 
@@ -85,6 +89,8 @@ const ACCOUNT_COLUMN_VALUE: Record<string, (row: any) => string> = {
   totalBalance: (row) => String(row.balance ?? 0),
   lastLoginIp: (row) => row.lastLoginIP || '',
   lastLoginTime: (row) => (row.lastLoginAt ? new Date(row.lastLoginAt).toLocaleString() : ''),
+  lastLoginLocation: (row) => row.lastLoginCountry || '',
+  lastLoginDevice: (row) => row.lastLoginDevice || '',
   currencyType: (row) => row.currency || '',
 };
 
@@ -339,12 +345,15 @@ export const useMemberSearch = () => {
 
   // Builds the real filter this app's REST API accepts (services/backoffice-api's
   // GET /players). Fields with no backend equivalent (lastDepositSince,
-  // lastBetTimeSince, noLoginSince, lastLoginIP, phoneNumberType,
-  // dateOfBirthFrom/To, lastLoginSince, searchType, currencyType,
-  // channelType, channelCode) are ignored here - they're disabled in
-  // AccountSearchForm so the UI doesn't pretend they filter anything.
-  // fullName/phone now match real columns (see players.service.ts) now
-  // that apps/player-web's "Complete your profile" page can populate them.
+  // lastBetTimeSince, phoneNumberType, dateOfBirthFrom/To, searchType,
+  // currencyType, channelType, channelCode) are ignored here - they're
+  // disabled in AccountSearchForm so the UI doesn't pretend they filter
+  // anything. fullName/phone match real columns (see players.service.ts)
+  // now that apps/player-web's "Complete your profile" page can populate
+  // them. lastLoginIP/lastLoginSince/noLoginSince are real too now -
+  // last_login_ip/last_login_at were already populated at login time
+  // (services/player-api's PlayerAuthService), they just had no filter
+  // wired to them until now.
   const buildFilter = () => {
     const filter: any = {};
     const search = searchData.username?.trim() || searchData.email?.trim();
@@ -361,6 +370,9 @@ export const useMemberSearch = () => {
       filter.dateRangeStart = new Date(searchData.registeredDateFrom).toISOString();
       filter.dateRangeEnd = new Date(searchData.registeredDateTo).toISOString();
     }
+    if (searchData.lastLoginIP?.trim()) filter.lastLoginIP = searchData.lastLoginIP.trim();
+    if (searchData.lastLoginSince) filter.lastLoginSince = new Date(searchData.lastLoginSince).toISOString();
+    if (searchData.noLoginSince) filter.noLoginSince = new Date(searchData.noLoginSince).toISOString();
     return filter;
   };
 
