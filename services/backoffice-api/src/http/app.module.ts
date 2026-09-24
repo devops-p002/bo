@@ -13,6 +13,7 @@ import { BreakGlassService } from '../break-glass.service.js';
 import { CaseQueueService } from '../case-queue.service.js';
 import { MakerCheckerService } from '../maker-checker.service.js';
 import { PlayerLookupService } from '../player-lookup.service.js';
+import { PlayersService } from '../players.service.js';
 import { AppErrorFilter } from './app-error.filter.js';
 import { AdminAuthController, AuthController } from './admin-auth.controller.js';
 import { AuditIndexController } from './audit-index.controller.js';
@@ -20,13 +21,14 @@ import { BreakGlassController } from './break-glass.controller.js';
 import { CaseQueueController } from './case-queue.controller.js';
 import { MakerCheckerController } from './maker-checker.controller.js';
 import { PlayerLookupController } from './player-lookup.controller.js';
+import { PlayersController } from './players.controller.js';
 import { RolesGuard } from './roles.guard.js';
 import { DB_TOKEN } from './tokens.js';
 
 export { DB_TOKEN };
 
 @Module({
-  controllers: [AdminAuthController, AuthController, MakerCheckerController, CaseQueueController, BreakGlassController, AuditIndexController, PlayerLookupController],
+  controllers: [AdminAuthController, AuthController, MakerCheckerController, CaseQueueController, BreakGlassController, AuditIndexController, PlayerLookupController, PlayersController],
   providers: [
     {
       provide: DB_TOKEN,
@@ -71,6 +73,11 @@ export { DB_TOKEN };
       provide: PlayerLookupService,
       inject: [DB_TOKEN, BACKOFFICE_CONFIG],
       useFactory: (db: Kysely<Database>, config: BackofficeConfig) => new PlayerLookupService(config.ACCOUNT_BASE_URL, new PostgresAuditChainStore(db)),
+    },
+    {
+      provide: PlayersService,
+      inject: [DB_TOKEN],
+      useFactory: (db: Kysely<Database>) => new PlayersService(db),
     },
     {
       provide: AuditIndexService,

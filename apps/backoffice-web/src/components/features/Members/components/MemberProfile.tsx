@@ -1,71 +1,20 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { gql, useQuery, useMutation } from '@apollo/client';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTheme } from '../../../../context/ThemeContext';
+import { getPlayer, updatePlayer } from '../../../../services/api/players';
 import PopupLayout from '../../../common/Layout/PopupLayout';
 import Breadcrumb from '../../../common/UI/Breadcrumb';
 import { SectionHeader, DataRow, SummaryRow } from './MemberProfile/ProfileUIComponents';
 import EditModals from './MemberProfile/EditModals';
 
-const GET_MEMBER_PROFILE = gql`
-  query GetMemberProfile($id: ID!) {
-    user(id: $id) {
-      id
-      username
-      firstName
-      lastName
-      fullName
-      email
-      phone
-      dateOfBirth
-      country
-      currency
-      status
-      vipLevel
-      balance
-      bonusBalance
-      totalDeposits
-      totalWithdrawals
-      totalBets
-      totalWins
-      lastLoginAt
-      lastLoginIP
-      createdAt
-      statistics {
-        totalTransactions
-        profitLoss
-        winRate
-        averageBetAmount
-        riskScore
-      }
-    }
-  }
-`;
-
-const UPDATE_MEMBER = gql`
-  mutation UpdateMemberProfile($id: ID!, $input: UpdateUserInput!) {
-    updateUser(id: $id, input: $input) {
-      id
-      username
-      firstName
-      lastName
-      fullName
-      email
-      phone
-      dateOfBirth
-      status
-      vipLevel
-    }
-  }
-`;
-
 const formatDateTime = (iso) => (iso ? new Date(iso).toLocaleString() : '-');
 const formatDate = (iso) => (iso ? new Date(iso).toISOString().slice(0, 10) : '');
 const formatMoney = (n) => (n ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-// Real backend enums (see server/src/graphql/schema/index.js). The mock UI
-// this replaced used made-up tiers ("Elite III", "Gold", ...) and statuses
-// ("Locked") that don't exist on the backend - swapped for the real ones.
+// Matches services/backoffice-api/src/roles.ts... no - matches the
+// PlayerStatus/PlayerVipLevel enums the players table's CHECK
+// constraints enforce (services/backoffice-api/migrations/
+// 20260406000010_create-players.cjs).
 const VIP_LEVELS = ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND'];
 const STATUSES = ['ACTIVE', 'INACTIVE', 'SUSPENDED', 'BANNED', 'PENDING'];
 
@@ -76,15 +25,28 @@ const MemberProfile = ({ memberId, isPopup = false }) => {
   // Use passed memberId or get from params
   const currentMemberId = memberId || id;
 
-  const { data, loading, error, refetch } = useQuery(GET_MEMBER_PROFILE, {
-    variables: useMemo(() => ({ id: currentMemberId }), [currentMemberId]),
-    skip: !currentMemberId,
-    fetchPolicy: 'cache-and-network',
-  });
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
 
-  const [updateMember, { loading: saving }] = useMutation(UPDATE_MEMBER);
+  const loadProfile = useCallback(async () => {
+    if (!currentMemberId) return;
+    try {
+      setLoading(true);
+      const data = await getPlayer(currentMemberId);
+      setUser(data);
+      setError(null);
+    } catch (err) {
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentMemberId]);
 
-  const user = data?.user;
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
 
   // Collapsible sections state
   const [expandedSections, setExpandedSections] = useState({
@@ -113,8 +75,7 @@ const MemberProfile = ({ memberId, isPopup = false }) => {
   const [saveError, setSaveError] = useState(null);
 
   // Re-sync the edit form whenever fresh member data arrives (initial load,
-  // or after a save), so modals always open pre-filled with real values
-  // instead of the old hardcoded mock defaults.
+  // or after a save), so modals always open pre-filled with real values.
   useEffect(() => {
     if (user) {
       setEditData({
@@ -154,16 +115,19 @@ const MemberProfile = ({ memberId, isPopup = false }) => {
   const runUpdate = async (input, modal) => {
     try {
       setSaveError(null);
-      await updateMember({ variables: { id: currentMemberId, input } });
-      await refetch();
+      setSaving(true);
+      await updatePlayer(currentMemberId, input);
+      await loadProfile();
       toggleEditModal(modal);
-    } catch (err) {
-      setSaveError(err.graphQLErrors?.[0]?.message || err.message);
+    } catch (err: any) {
+      setSaveError(err.message);
+    } finally {
+      setSaving(false);
     }
   };
 
   // General modal -> firstName/lastName/dateOfBirth/vipLevel are real
-  // UpdateUserInput fields. Password, gender, marital status, VIP
+  // UpdatePlayerDto fields. Password, gender, marital status, VIP
   // experience adjustment, group membership and user remark have no
   // backend equivalent (see EditModals.js) and are not sent.
   const handleSaveGeneral = () => runUpdate({
@@ -243,7 +207,7 @@ const MemberProfile = ({ memberId, isPopup = false }) => {
                   Status
                   <button
                     onClick={() => toggleEditModal('status')}
-                    className="ml-2 px-1 py-0.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="ml-2 px-1 py-0.5 text-xs bg-primary-600 text-white rounded hover:bg-primary-700"
                   >
                     Edit
                   </button>
@@ -262,7 +226,7 @@ const MemberProfile = ({ memberId, isPopup = false }) => {
               <DataRow label="Country" value={user.country || '-'} />
               {/* Fields with no backend equivalent (group, affiliate URL, user/risk
                   remarks, channel/referral info, gender, marital status) are
-                  dropped rather than shown with fabricated values - see report. */}
+                  dropped rather than shown with fabricated values. */}
             </div>
           )}
         </div>
@@ -299,11 +263,7 @@ const MemberProfile = ({ memberId, isPopup = false }) => {
               <DataRow label="Last Login Time" value={formatDateTime(user.lastLoginAt)} centerAlign={true} />
               <DataRow label="Last Login IP" value={user.lastLoginIP || '-'} centerAlign={true} />
               {/* First/last deposit, withdrawal, adjustment, bonus and bet
-                  timestamps aren't tracked as discrete User fields on the
-                  backend (only aggregate totals are) - dropped rather than
-                  invented. They could be derived from user.transactions /
-                  user.bets queries sorted by date, which is a larger lift
-                  left out of this pass. */}
+                  timestamps aren't tracked yet - only aggregate totals are. */}
             </div>
           )}
         </div>
@@ -342,9 +302,6 @@ const MemberProfile = ({ memberId, isPopup = false }) => {
                   </h4>
                   <div className="space-y-0">
                     <SummaryRow label="Total Transactions" value={(stats.totalTransactions ?? 0).toLocaleString()} />
-                    {/* Per-type counts (deposit count, withdrawal count, bet
-                        count, ...) aren't exposed by UserStatistics - only
-                        the aggregate totalTransactions is real. */}
                   </div>
                 </div>
 
@@ -357,8 +314,6 @@ const MemberProfile = ({ memberId, isPopup = false }) => {
                     <SummaryRow label="Average Bet" value={formatMoney(stats.averageBetAmount)} />
                     <SummaryRow label="Risk Score" value={stats.riskScore ?? 0} />
                     <SummaryRow label="Last Activity" value={formatDateTime(user.lastLoginAt)} />
-                    {/* Max win/lose, days active and a loyalty score aren't
-                        tracked on the backend - dropped. */}
                   </div>
                 </div>
               </div>
@@ -397,13 +352,10 @@ const MemberProfile = ({ memberId, isPopup = false }) => {
                 </div>
               </div>
 
-              {/* Provider Accounts - no backend concept of per-provider
-                  wallets/linkage exists (nothing under Game or User models
-                  tracks this), so this stays a clearly-labeled placeholder
-                  rather than a fake mapping. */}
+              {/* Provider Accounts - no per-provider wallet/linkage concept
+                  exists yet, so this stays a clearly-labeled placeholder. */}
               <div className={`text-xs italic p-2 rounded ${isDarkTheme ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>
-                Provider-account balances are not implemented on the backend (no game-provider-account
-                linkage exists in the schema). Not shown.
+                Provider-account balances are not implemented yet. Not shown.
               </div>
             </div>
           )}

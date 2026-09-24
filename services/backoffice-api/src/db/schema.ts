@@ -88,6 +88,38 @@ export interface AuditIndexWatermarksTable {
   updated_at: TimestampColumn;
 }
 
+export type PlayerStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'BANNED' | 'PENDING';
+export type PlayerVipLevel = 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND';
+
+// Decimal columns round-trip through node-postgres as strings (no lossy
+// float parsing) - Kysely's insert/update side accepts either a string
+// or number, but every read comes back as a string; PlayersService is
+// responsible for converting to a number at the HTTP boundary.
+type DecimalColumn = ColumnType<string, string | number | undefined, string | number>;
+
+export interface PlayersTable {
+  id: string;
+  username: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  date_of_birth: ColumnType<Date | null, string | Date | null | undefined, string | Date | null>;
+  country: string | null;
+  currency: ColumnType<string, string | undefined, string>;
+  status: ColumnType<PlayerStatus, PlayerStatus | undefined, PlayerStatus>;
+  vip_level: ColumnType<PlayerVipLevel, PlayerVipLevel | undefined, PlayerVipLevel>;
+  balance: DecimalColumn;
+  bonus_balance: DecimalColumn;
+  total_deposits: DecimalColumn;
+  total_withdrawals: DecimalColumn;
+  total_bets: DecimalColumn;
+  total_wins: DecimalColumn;
+  last_login_at: NullableTimestampColumn;
+  last_login_ip: string | null;
+  created_at: CreatedAtColumn;
+}
+
 export interface Database {
   admin_users: AdminUsersTable;
   admin_roles: AdminRolesTable;
@@ -98,4 +130,5 @@ export interface Database {
   break_glass_grants: BreakGlassGrantsTable;
   audit_index: AuditIndexTable;
   audit_index_watermarks: AuditIndexWatermarksTable;
+  players: PlayersTable;
 }

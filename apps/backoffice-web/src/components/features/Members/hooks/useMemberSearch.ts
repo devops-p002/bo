@@ -1,36 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
-import { gql, useQuery } from '@apollo/client';
-
-// Real, wireable search fields only (see server/src/graphql/schema/index.js
-// UserFilterInput: role, status, vipLevel, country, search, dateRange).
-// `search` ILIKE-matches username/email/firstName/lastName server-side (see
-// server/src/graphql/dataSources/UserAPI.js), so the Username and Email
-// inputs both feed the same backend `search` term - if both are filled,
-// username wins (documented in the form).
-const SEARCH_MEMBERS = gql`
-  query SearchMembers($filter: UserFilterInput, $pagination: PaginationInput) {
-    users(filter: $filter, pagination: $pagination) {
-      totalCount
-      nodes {
-        id
-        username
-        fullName
-        email
-        phone
-        dateOfBirth
-        vipLevel
-        status
-        balance
-        currency
-        lastLoginAt
-        lastLoginIP
-        createdAt
-      }
-    }
-  }
-`;
+import { useState, useEffect, useCallback } from 'react';
+import { useNotification } from '../../../../context/NotificationContext';
+import { listPlayers } from '../../../../services/api/players';
 
 export const useMemberSearch = () => {
+  const notification = useNotification();
   const [activeTab, setActiveTab] = useState('Account');
   const [isConditionPanelOpen, setIsConditionPanelOpen] = useState(true);
 
@@ -73,7 +46,7 @@ export const useMemberSearch = () => {
 
   // The filter actually sent to the query - only updated when "Search" is
   // clicked (not on every keystroke), same UX as before.
-  const [appliedFilter, setAppliedFilter] = useState({});
+  const [appliedFilter, setAppliedFilter] = useState<any>({});
 
   // Column visibility state for Account tab. Columns with no backend
   // equivalent (vipExperience, vipPoint, affiliateUrl, signUp, lastDeposit,
@@ -134,24 +107,36 @@ export const useMemberSearch = () => {
     };
   }, [showColumnsDropdown]);
 
-  // Memoized so the variables object keeps a stable reference across
-  // re-renders - an inline object literal here would give useQuery a new
-  // `variables` reference every render, which it treats as "variables
-  // changed" and refetches forever (see gotcha #1).
-  const queryVariables = useMemo(() => ({
-    filter: appliedFilter,
-    pagination: { page: currentPage, limit: recordsPerPage },
-  }), [appliedFilter, currentPage, recordsPerPage]);
-
-  const { data, loading, error } = useQuery(SEARCH_MEMBERS, {
-    variables: queryVariables,
-    skip: activeTab !== 'Account',
-    fetchPolicy: 'cache-and-network',
-  });
-
-  const results = data?.users?.nodes ?? [];
-  const totalCount = data?.users?.totalCount ?? 0;
+  const [results, setResults] = useState<any[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [resultsLoading, setResultsLoading] = useState(false);
+  const [resultsError, setResultsError] = useState<any>(null);
   const totalPages = Math.max(1, Math.ceil(totalCount / recordsPerPage));
+
+  useEffect(() => {
+    if (activeTab !== 'Account') return undefined;
+    let cancelled = false;
+
+    setResultsLoading(true);
+    listPlayers(appliedFilter, { page: currentPage, limit: recordsPerPage })
+      .then((data) => {
+        if (cancelled) return;
+        setResults(data.nodes ?? []);
+        setTotalCount(data.totalCount ?? 0);
+        setResultsError(null);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setResultsError(err);
+      })
+      .finally(() => {
+        if (!cancelled) setResultsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, appliedFilter, currentPage, recordsPerPage]);
 
   // Handlers
   const handleInputChange = (field, value) => {
@@ -173,9 +158,9 @@ export const useMemberSearch = () => {
     setCurrentPage(1);
   };
 
-  const handleExport = () => {
-    alert(`Exporting ${activeTab} data (${recordsPerPage} records per page)`);
-  };
+  const handleExport = useCallback(() => {
+    notification.info(`Exporting ${activeTab} data (${recordsPerPage} records per page)`);
+  }, [notification, activeTab, recordsPerPage]);
 
   const handleColumnToggle = (column) => {
     if (activeTab === 'Account') {
@@ -191,16 +176,17 @@ export const useMemberSearch = () => {
     }
   };
 
-  const handleSave = () => {
-    alert('View settings saved successfully!');
-  };
+  const handleSave = useCallback(() => {
+    notification.success('View settings saved successfully!');
+  }, [notification]);
 
-  // Builds the real UserFilterInput from the form. Fields with no schema
-  // equivalent (lastDepositSince, lastBetTimeSince, noLoginSince,
-  // lastLoginIP, phoneNumber(Type), dateOfBirthFrom/To, lastLoginSince,
-  // searchType, currencyType, channelType, channelCode, fullName) are
-  // ignored here - they're disabled in AccountSearchForm so the UI doesn't
-  // pretend they filter anything.
+  // Builds the real filter this app's REST API accepts (services/backoffice-api's
+  // GET /players). Fields with no backend equivalent (lastDepositSince,
+  // lastBetTimeSince, noLoginSince, lastLoginIP, phoneNumber(Type),
+  // dateOfBirthFrom/To, lastLoginSince, searchType, currencyType,
+  // channelType, channelCode, fullName) are ignored here - they're
+  // disabled in AccountSearchForm so the UI doesn't pretend they filter
+  // anything.
   const buildFilter = () => {
     const filter: any = {};
     const search = searchData.username?.trim() || searchData.email?.trim();
@@ -211,13 +197,9 @@ export const useMemberSearch = () => {
     if (searchData.vip && searchData.vip !== 'All') {
       filter.vipLevel = searchData.vip;
     }
-    // DateRangeInput requires both start and end (non-null in the schema),
-    // so only send it once both bounds are set.
     if (searchData.registeredDateFrom && searchData.registeredDateTo) {
-      filter.dateRange = {
-        start: new Date(searchData.registeredDateFrom).toISOString(),
-        end: new Date(searchData.registeredDateTo).toISOString(),
-      };
+      filter.dateRangeStart = new Date(searchData.registeredDateFrom).toISOString();
+      filter.dateRangeEnd = new Date(searchData.registeredDateTo).toISOString();
     }
     return filter;
   };
@@ -276,8 +258,7 @@ export const useMemberSearch = () => {
 
   // Navigation function for username clicks - takes the member's real id
   // (not username: the profile route is /members/profile/:id and the
-  // backend looks members up by id, not username - the previous version
-  // passed `username` here, which would 404 against real data).
+  // backend looks members up by id, not username).
   const handleUsernameClick = (id) => {
     // Open member profile page in new window
     window.open(`/members/profile/${id}`, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
@@ -296,8 +277,8 @@ export const useMemberSearch = () => {
 
     // Search results
     results,
-    resultsLoading: loading,
-    resultsError: error,
+    resultsLoading,
+    resultsError,
     totalCount,
     currentPage,
     totalPages,

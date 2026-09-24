@@ -7,4 +7,5 @@ export { default as Loading } from './Loading';
 export { default as ErrorBoundary } from './ErrorBoundary';
 export { default as Breadcrumb } from './Breadcrumb';
 export { default as DateTimePicker } from './DateTimePicker';
-export { default as DateTimePickerDemo } from './DateTimePickerDemo'; 
+export { default as DateTimePickerDemo } from './DateTimePickerDemo';
+export { default as NotificationToast } from './NotificationToast';

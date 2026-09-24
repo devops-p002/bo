@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTheme } from '../../../context/ThemeContext';
+import { NotificationToast } from '../UI';
 import Header from './Header';
 import Sidebar from './Sidebar';
 
@@ -35,6 +36,8 @@ const Layout = ({ children }) => {
           {children}
         </main>
       </div>
+
+      <NotificationToast />
     </div>
   );
 };
