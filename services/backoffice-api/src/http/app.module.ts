@@ -16,6 +16,7 @@ import { MakerCheckerService } from '../maker-checker.service.js';
 import { MemberGroupsService } from '../member-groups.service.js';
 import { PlayerLookupService } from '../player-lookup.service.js';
 import { PlayersService } from '../players.service.js';
+import { TransactionsService } from '../transactions.service.js';
 import { AppErrorFilter } from './app-error.filter.js';
 import { AdminAuthController, AuthController } from './admin-auth.controller.js';
 import { AuditIndexController } from './audit-index.controller.js';
@@ -26,6 +27,7 @@ import { MakerCheckerController } from './maker-checker.controller.js';
 import { MemberGroupsController } from './member-groups.controller.js';
 import { PlayerLookupController } from './player-lookup.controller.js';
 import { PlayersController } from './players.controller.js';
+import { TransactionsController } from './transactions.controller.js';
 import { RolesGuard } from './roles.guard.js';
 import { DB_TOKEN } from './tokens.js';
 
@@ -43,6 +45,7 @@ export { DB_TOKEN };
     PlayersController,
     MemberGroupsController,
     BulkOperationsController,
+    TransactionsController,
   ],
   providers: [
     {
@@ -103,6 +106,11 @@ export { DB_TOKEN };
       provide: BulkOperationsService,
       inject: [DB_TOKEN],
       useFactory: (db: Kysely<Database>) => new BulkOperationsService(db),
+    },
+    {
+      provide: TransactionsService,
+      inject: [DB_TOKEN],
+      useFactory: (db: Kysely<Database>) => new TransactionsService(db),
     },
     {
       provide: AuditIndexService,

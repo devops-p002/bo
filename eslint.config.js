@@ -6,10 +6,11 @@ import tseslint from 'typescript-eslint';
 // package with no eslint.config.js of its own (ESLint's flat-config
 // resolution walks up from the linted file to the nearest one - this is
 // the fallback for whatever doesn't have a closer match).
-// apps/backoffice-web is deliberately excluded: it's the original
-// dashboard, kept on its own looser, pre-existing eslint.config.js.
+// apps/backoffice-web and apps/player-web are deliberately excluded:
+// both are Vite SPAs with their own eslint.config.js (React-aware rules
+// this generic TS-only config doesn't carry).
 export default tseslint.config(
-  { ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**', 'apps/backoffice-web/**'] },
+  { ignores: ['**/dist/**', '**/node_modules/**', '**/coverage/**', 'apps/backoffice-web/**', 'apps/player-web/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

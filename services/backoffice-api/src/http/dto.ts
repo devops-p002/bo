@@ -107,3 +107,38 @@ export const createBulkOperationSchema = z.object({
   value: z.string().trim().min(1),
 });
 export type CreateBulkOperationDto = z.infer<typeof createBulkOperationSchema>;
+
+const TRANSACTION_TYPES = ['DEPOSIT', 'WITHDRAWAL', 'BONUS', 'REFUND'] as const;
+const TRANSACTION_STATUSES = ['PENDING', 'APPROVED', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELLED', 'EXPIRED'] as const;
+
+export const listTransactionsQuerySchema = z.object({
+  type: z.enum(TRANSACTION_TYPES).optional(),
+  status: z.enum(TRANSACTION_STATUSES).optional(),
+  paymentMethod: z.string().trim().min(1).optional(),
+  currency: z.string().trim().length(3).optional(),
+  playerId: z.string().trim().min(1).optional(),
+  search: z.string().trim().min(1).optional(),
+  minAmount: z.coerce.number().nonnegative().optional(),
+  maxAmount: z.coerce.number().nonnegative().optional(),
+  dateRangeStart: z.string().datetime().optional(),
+  dateRangeEnd: z.string().datetime().optional(),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(200).default(20),
+});
+export type ListTransactionsQueryDto = z.infer<typeof listTransactionsQuerySchema>;
+
+export const createTransactionSchema = z.object({
+  playerId: z.string().trim().min(1),
+  type: z.enum(TRANSACTION_TYPES),
+  amount: z.number().positive(),
+  currency: z.string().trim().length(3).optional(),
+  paymentMethod: z.string().trim().min(1).optional(),
+  externalReference: z.string().trim().min(1).optional(),
+});
+export type CreateTransactionDto = z.infer<typeof createTransactionSchema>;
+
+export const updateTransactionStatusSchema = z.object({
+  status: z.enum(TRANSACTION_STATUSES),
+  reason: z.string().trim().min(1).optional(),
+});
+export type UpdateTransactionStatusDto = z.infer<typeof updateTransactionStatusSchema>;

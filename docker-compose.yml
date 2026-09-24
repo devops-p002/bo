@@ -69,3 +69,39 @@ services:
       - "127.0.0.1:6100:80"
     networks:
       - bo-internal
+
+  # player_api_app's role/password is provisioned by the player-api-
+  # grants migration (run as part of backoffice-api's own migrate:up),
+  # not by postgres's own init script - see that migration's comment.
+  player-api:
+    build:
+      context: .
+      dockerfile: services/player-api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: 5200
+      NODE_ENV: production
+      DATABASE_URL: postgresql://player_api_app:${SERVICE_DB_PASSWORD_PLAYER_API:?SERVICE_DB_PASSWORD_PLAYER_API is required}@postgres:5432/backoffice_api
+      PLAYER_JWT_SECRET: ${PLAYER_JWT_SECRET:?PLAYER_JWT_SECRET is required}
+      CORS_ORIGIN: ${PLAYER_WEB_ORIGIN:-https://sunrion.online}
+    # 127.0.0.1-only - same cloudflared-over-loopback reasoning as
+    # backoffice-api.
+    ports:
+      - "127.0.0.1:6200:5200"
+    networks:
+      - bo-internal
+
+  player-web:
+    build:
+      context: .
+      dockerfile: apps/player-web/Dockerfile
+      args:
+        REACT_APP_API_URL: ${PLAYER_WEB_API_URL:-https://api.sunrion.online}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6300:80"
+    networks:
+      - bo-internal

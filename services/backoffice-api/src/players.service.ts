@@ -135,11 +135,12 @@ export class PlayersService {
     if (!row) throw new NotFoundError(`Player ${id} not found`);
 
     const player = toApiShape(row);
-    // Derived, not stored - computed fresh from the same totals the
-    // profile already displays, rather than a separate transactions
-    // table this pass doesn't build (see the migration's own comment on
-    // why balance/totals are plain tracking columns, not a ledger).
-    const totalTransactions = 0;
+    const txCountRow = await this.db
+      .selectFrom('transactions')
+      .select((eb) => eb.fn.countAll<string>().as('count'))
+      .where('player_id', '=', id)
+      .executeTakeFirst();
+    const totalTransactions = txCountRow ? Number.parseInt(txCountRow.count, 10) : 0;
     const profitLoss = player.totalWins - player.totalBets;
     const winRate = player.totalBets > 0 ? (player.totalWins / player.totalBets) * 100 : 0;
     const averageBetAmount = 0;

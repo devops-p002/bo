@@ -27,3 +27,9 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "${service}" <<-SQL
 SQL
 
 echo "Database provisioning complete: ${service}"
+
+# services/player-api's own player_api_app role is deliberately NOT
+# created here - unlike this script (fresh-volume-only, never re-runs
+# against production's already-existing volume), the player-api-grants
+# migration creates it idempotently and runs on every deploy, so that's
+# what actually takes effect in production. See that migration for why.

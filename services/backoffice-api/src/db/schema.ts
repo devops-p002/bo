@@ -151,6 +151,23 @@ export interface BulkOperationsTable {
   completed_at: NullableTimestampColumn;
 }
 
+export type TransactionType = 'DEPOSIT' | 'WITHDRAWAL' | 'BONUS' | 'REFUND';
+export type TransactionStatus = 'PENDING' | 'APPROVED' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'EXPIRED';
+
+export interface TransactionsTable {
+  id: string;
+  player_id: string;
+  type: ColumnType<TransactionType, TransactionType | undefined, TransactionType>;
+  amount: DecimalColumn;
+  currency: ColumnType<string, string | undefined, string>;
+  status: ColumnType<TransactionStatus, TransactionStatus | undefined, TransactionStatus>;
+  payment_method: string | null;
+  external_reference: string | null;
+  reason: string | null;
+  created_at: CreatedAtColumn;
+  updated_at: TimestampColumn;
+}
+
 export interface Database {
   admin_users: AdminUsersTable;
   admin_roles: AdminRolesTable;
@@ -165,4 +182,5 @@ export interface Database {
   member_groups: MemberGroupsTable;
   member_group_members: MemberGroupMembersTable;
   bulk_operations: BulkOperationsTable;
+  transactions: TransactionsTable;
 }

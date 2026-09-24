@@ -82,6 +82,12 @@ jobs:
       # table-level privileges on top - same division of responsibility
       # platform/infra/deploy.sh already uses (migrates as platform_admin,
       # runs the app as its own least-privilege role).
+      # SERVICE_DB_PASSWORD_PLAYER_API is passed through here (not just
+      # DATABASE_URL) because the player-api-grants migration itself
+      # creates the player_api_app role using that value - see that
+      # migration's own comment on why it, not infra/postgres/
+      # init-databases.sh, is what actually provisions this role in
+      # production.
       - name: run backoffice-api migrations
         run: |
           set -euo pipefail
@@ -90,6 +96,7 @@ jobs:
           set +a
           docker compose --env-file "$HOME/bo-secrets/.env" -p bo run --rm \
             -e DATABASE_URL="postgresql://bo_admin:${POSTGRES_ADMIN_PASSWORD}@postgres:5432/backoffice_api" \
+            -e SERVICE_DB_PASSWORD_PLAYER_API="${SERVICE_DB_PASSWORD_PLAYER_API}" \
             backoffice-api pnpm migrate:up
 
       - name: deploy
