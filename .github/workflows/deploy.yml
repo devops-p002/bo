@@ -43,8 +43,24 @@ jobs:
           docker compose -p bo logs postgres
           exit 1
 
+      # Migrations run as the Postgres superuser, not backoffice_api_app -
+      # backoffice_api_app only has schema USAGE (see infra/postgres/
+      # init-databases.sh), never CREATE, and Postgres 15+ no longer grants
+      # PUBLIC that by default either. The tables migrations create are
+      # meant to be owned by the superuser; the final migration
+      # (grants.cjs) is what explicitly GRANTs backoffice_api_app scoped,
+      # table-level privileges on top - same division of responsibility
+      # platform/infra/deploy.sh already uses (migrates as platform_admin,
+      # runs the app as its own least-privilege role).
       - name: run backoffice-api migrations
-        run: docker compose --env-file "$HOME/bo-secrets/.env" -p bo run --rm backoffice-api pnpm migrate:up
+        run: |
+          set -euo pipefail
+          set -a
+          source "$HOME/bo-secrets/.env"
+          set +a
+          docker compose --env-file "$HOME/bo-secrets/.env" -p bo run --rm \
+            -e DATABASE_URL="postgresql://bo_admin:${POSTGRES_ADMIN_PASSWORD}@postgres:5432/backoffice_api" \
+            backoffice-api pnpm migrate:up
 
       - name: deploy
         run: docker compose --env-file "$HOME/bo-secrets/.env" -p bo up -d --remove-orphans
