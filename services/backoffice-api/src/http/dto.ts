@@ -142,3 +142,40 @@ export const updateTransactionStatusSchema = z.object({
   reason: z.string().trim().min(1).optional(),
 });
 export type UpdateTransactionStatusDto = z.infer<typeof updateTransactionStatusSchema>;
+
+const GAME_CATEGORIES = ['SLOTS', 'LIVE_CASINO', 'GAME_SHOWS', 'TABLE_GAMES', 'ORIGINALS'] as const;
+const BET_STATUSES = ['PENDING', 'SETTLED', 'PARTIALLY_SETTLED', 'CANCELLED', 'VOID'] as const;
+
+export const listBetsQuerySchema = z.object({
+  status: z.enum(BET_STATUSES).optional(),
+  gameCategory: z.enum(GAME_CATEGORIES).optional(),
+  playerId: z.string().trim().min(1).optional(),
+  search: z.string().trim().min(1).optional(),
+  minAmount: z.coerce.number().nonnegative().optional(),
+  maxAmount: z.coerce.number().nonnegative().optional(),
+  dateRangeStart: z.string().datetime().optional(),
+  dateRangeEnd: z.string().datetime().optional(),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(200).default(20),
+});
+export type ListBetsQueryDto = z.infer<typeof listBetsQuerySchema>;
+
+export const updateBetStatusSchema = z.object({
+  status: z.enum(BET_STATUSES),
+  winAmount: z.number().nonnegative().optional(),
+  result: z.unknown().optional(),
+  voidReason: z.string().trim().min(1).optional(),
+});
+export type UpdateBetStatusDto = z.infer<typeof updateBetStatusSchema>;
+
+export const listGamesQuerySchema = z.object({
+  category: z.enum(GAME_CATEGORIES).optional(),
+});
+export type ListGamesQueryDto = z.infer<typeof listGamesQuerySchema>;
+
+export const updateGameLimitsSchema = z.object({
+  minBet: z.number().nonnegative().optional(),
+  maxBet: z.number().nonnegative().optional(),
+  maxWin: z.number().nonnegative().optional(),
+});
+export type UpdateGameLimitsDto = z.infer<typeof updateGameLimitsSchema>;

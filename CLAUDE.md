@@ -27,8 +27,8 @@
   approving/rejecting one, the only thing that ever moves balance, stays
   exclusively an admin action through backoffice-api's own
   TransactionsService. This is the intended cross-app wiring: player-web
-  generates real requests, the backoffice Payments pages (once rewired -
-  see the wiring plan below) approve them against the same data.
+  generates real requests, the backoffice Payments pages approve them
+  against the same data.
 - `packages/{audit-chain,config,errors,ids,logging}`: shared, brought over
   from `platform/`.
 
@@ -55,21 +55,31 @@
 ## Wiring plan (admin dashboard, phase by phase)
 
 1. Members — `players` table. Done (Search/profile/VIP/Group/Mass-Update).
-2. Payments — `transactions` table (deposit/withdrawal/bonus/refund) and
-   its backend (list/create/approve-reject-cancel, balance-crediting on
-   COMPLETED) are built - real rows now come from apps/player-web's own
-   wallet actions, not just admin-created test data. The admin frontend
-   (Deposit Management, Withdrawal Management, Transaction History) is
-   still on its old GraphQL mock and needs rewiring onto this REST API.
-   Payment Methods stays mock either way - no backend model requested.
-3. Bets — `bets` table: Pending, Settlement, Patterns, Limits.
+2. Payments — Done. `transactions` table + backend (list/create/approve-
+   reject-cancel, balance-crediting on COMPLETED) built; real rows come
+   from apps/player-web's own wallet actions. Admin frontend (Deposit
+   Management, Withdrawal Management, Transaction History, Dashboard's
+   deposit/withdrawal drill-down pages) rewired off the old GraphQL mock
+   onto this REST API. Payment Methods stays mock - no backend model
+   requested.
+3. Bets — Backend done (`bets` table, list/settle/cancel/void via
+   GET/PATCH `/bets`); admin frontend (Pending, Settlement, History,
+   Limits) rewired onto it. Deliberately no create endpoint and no
+   balance side effects on settlement - see the create-bets migration's
+   comment. Stays empty until a real game engine exists to place bets;
+   an empty real table beats a populated fake one. Betting Patterns tab
+   is an honest "not wired up" placeholder (no aggregate pattern/anomaly
+   model exists). Limits tab added `min_bet`/`max_bet`/`max_win` columns
+   to `games` and a narrow GET/PATCH `/games` (limits only, not full CRUD
+   - see game-limits.service.ts).
 4. Marketing — `bonus_templates` + `bonus_issuances`.
 5. Risk — `risk_alerts` + queries over transactions/bets.
 6. Reports — pure aggregation endpoints, no new tables.
 7. CMS — the `games` table already exists (built for apps/player-web's
-   catalog, seeded with a fixed set of rows) and its schema/data don't
-   need to change - this phase is giving admins CRUD over it, not
-   creating it.
+   catalog, seeded with a fixed set of rows; phase 3 added min/max bet
+   and max win columns for the Bets Limits tab). This phase is giving
+   admins full CRUD over it (create/delete/rename/thumbnail/etc) - the
+   narrow GET/PATCH `/games` phase 3 added is limits-only, not that.
 8. Settings — real staff management on `admin_users`; roles read-only
    (code-defined, not admin-editable).
 9. Dashboard — live aggregates once 2-4 exist.

@@ -168,6 +168,49 @@ export interface TransactionsTable {
   updated_at: TimestampColumn;
 }
 
+export type GameCategory = 'SLOTS' | 'LIVE_CASINO' | 'GAME_SHOWS' | 'TABLE_GAMES' | 'ORIGINALS';
+
+// Owned by the games migration (created for apps/player-web's catalog,
+// GRANT SELECT to backoffice_api_app there; min/max_bet/win added later,
+// GRANT UPDATE scoped to just those three columns - see that migration).
+// Only the fields the Bets section's "Bet Limits" tab needs are modeled
+// here; full CMS CRUD (create/delete/thumbnail/etc, CLAUDE.md phase 7) is
+// a separate, not-yet-built phase.
+export interface GamesTable {
+  id: string;
+  name: string;
+  category: ColumnType<GameCategory, GameCategory | undefined, GameCategory>;
+  provider: ColumnType<string, string | undefined, string>;
+  is_active: ColumnType<boolean, boolean | undefined, boolean>;
+  min_bet: DecimalColumn | null;
+  max_bet: DecimalColumn | null;
+  max_win: DecimalColumn | null;
+  created_at: CreatedAtColumn;
+}
+
+export type BetStatus = 'PENDING' | 'SETTLED' | 'PARTIALLY_SETTLED' | 'CANCELLED' | 'VOID';
+
+export interface BetsTable {
+  id: string;
+  player_id: string;
+  game_id: string;
+  type: string;
+  status: ColumnType<BetStatus, BetStatus | undefined, BetStatus>;
+  amount: DecimalColumn;
+  currency: ColumnType<string, string | undefined, string>;
+  odds: DecimalColumn | null;
+  potential_win: DecimalColumn;
+  win_amount: DecimalColumn | null;
+  risk_score: ColumnType<number, number | undefined, number>;
+  risk_flags: ColumnType<string[], string[] | undefined, string[]>;
+  ip_address: string | null;
+  selections: ColumnType<unknown, unknown, unknown> | null;
+  result: ColumnType<unknown, unknown, unknown> | null;
+  void_reason: string | null;
+  created_at: CreatedAtColumn;
+  settled_at: NullableTimestampColumn;
+}
+
 export interface Database {
   admin_users: AdminUsersTable;
   admin_roles: AdminRolesTable;
@@ -183,4 +226,6 @@ export interface Database {
   member_group_members: MemberGroupMembersTable;
   bulk_operations: BulkOperationsTable;
   transactions: TransactionsTable;
+  games: GamesTable;
+  bets: BetsTable;
 }

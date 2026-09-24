@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, Table, Modal, Button } from '../../../common/UI';
 import { Input, Select } from '../../../common/Forms';
 import useBets from '../hooks/useBets';
@@ -51,7 +51,7 @@ const toCsv = (rows) => {
   const header = ['Bet ID', 'Player', 'Game', 'Type', 'Amount', 'Win Amount', 'Status', 'Placed At', 'Settled At'];
   const lines = rows.map((bet) => [
     bet.id,
-    bet.user?.username ?? bet.userId,
+    bet.username,
     bet.gameName || bet.gameCategory || '',
     bet.type,
     bet.amount,
@@ -83,6 +83,8 @@ const BetHistory = ({ filters: externalFilters }: { filters?: any } = {}) => {
   useEffect(() => {
     const backendFilter: any = {};
     if (filters.status !== 'all') backendFilter.status = filters.status;
+    if (filters.gameCategory !== 'all') backendFilter.gameCategory = filters.gameCategory;
+    if (filters.playerUsername) backendFilter.search = filters.playerUsername;
     if (filters.minAmount !== '') backendFilter.minAmount = parseFloat(filters.minAmount);
     if (filters.maxAmount !== '') backendFilter.maxAmount = parseFloat(filters.maxAmount);
     if (filters.dateFrom && filters.dateTo) {
@@ -109,15 +111,10 @@ const BetHistory = ({ filters: externalFilters }: { filters?: any } = {}) => {
     setShowModal(true);
   };
 
-  // Client-side filters for fields the backend doesn't filter on
-  // (BetFilterInput has no gameCategory / username search).
-  const visibleBets = useMemo(() => {
-    return (bets || []).filter((bet) => {
-      if (filters.gameCategory !== 'all' && bet.gameCategory !== filters.gameCategory) return false;
-      if (filters.playerUsername && !(bet.user?.username || '').toLowerCase().includes(filters.playerUsername.toLowerCase())) return false;
-      return true;
-    });
-  }, [bets, filters.gameCategory, filters.playerUsername]);
+  // gameCategory and playerUsername (-> search) are now real server-side
+  // filters (see useBets.ts/bets.service.ts), so no client-side filtering
+  // is needed on top of what GET /bets already returned.
+  const visibleBets = bets || [];
 
   const handleExport = () => {
     const csv = toCsv(visibleBets);
@@ -151,7 +148,7 @@ const BetHistory = ({ filters: externalFilters }: { filters?: any } = {}) => {
 
   const processedData = visibleBets.map((bet) => ({
     id: bet.id,
-    player: bet.user?.username ?? bet.userId,
+    player: bet.username,
     gameBadge: getGameBadge(bet.gameCategory),
     type: bet.type,
     amountLabel: formatMoney(bet.amount),
@@ -197,7 +194,7 @@ const BetHistory = ({ filters: externalFilters }: { filters?: any } = {}) => {
             <div className="p-4">
               <h3 className="text-lg font-semibold mb-4">Bet Information</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div><span className="font-medium">Player:</span><span className="ml-2">{selectedBet.user?.username ?? selectedBet.userId}</span></div>
+                <div><span className="font-medium">Player:</span><span className="ml-2">{selectedBet.username}</span></div>
                 <div><span className="font-medium">Game:</span><span className="ml-2">{selectedBet.gameName || selectedBet.gameCategory}</span></div>
                 <div><span className="font-medium">Bet Type:</span><span className="ml-2">{selectedBet.type}</span></div>
                 <div><span className="font-medium">Odds:</span><span className="ml-2">{selectedBet.odds}</span></div>
@@ -248,11 +245,10 @@ const BetHistory = ({ filters: externalFilters }: { filters?: any } = {}) => {
               options={[
                 { value: 'all', label: 'All Games' },
                 { value: 'SLOTS', label: 'Slots' },
-                { value: 'TABLE_GAMES', label: 'Table Games' },
                 { value: 'LIVE_CASINO', label: 'Live Casino' },
-                { value: 'SPORTS', label: 'Sports' },
-                { value: 'VIRTUAL_SPORTS', label: 'Virtual Sports' },
-                { value: 'LOTTERY', label: 'Lottery' },
+                { value: 'GAME_SHOWS', label: 'Game Shows' },
+                { value: 'TABLE_GAMES', label: 'Table Games' },
+                { value: 'ORIGINALS', label: 'Originals' },
               ]}
             />
             <Input name="playerUsername" label="Player Username" value={filters.playerUsername} onChange={(e) => handleFilterChange('playerUsername', e.target.value)} placeholder="Search by username..." />

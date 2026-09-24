@@ -10,11 +10,10 @@ import useBettingLimits from '../hooks/useBettingLimits';
 const CATEGORY_OPTIONS = [
   { value: 'all', label: 'All Categories' },
   { value: 'SLOTS', label: 'Slots' },
-  { value: 'TABLE_GAMES', label: 'Table Games' },
   { value: 'LIVE_CASINO', label: 'Live Casino' },
-  { value: 'SPORTS', label: 'Sports' },
-  { value: 'VIRTUAL_SPORTS', label: 'Virtual Sports' },
-  { value: 'LOTTERY', label: 'Lottery' },
+  { value: 'GAME_SHOWS', label: 'Game Shows' },
+  { value: 'TABLE_GAMES', label: 'Table Games' },
+  { value: 'ORIGINALS', label: 'Originals' },
 ];
 
 const formatMoney = (value) => (value == null ? 'N/A' : `$${Number(value).toLocaleString()}`);
@@ -26,11 +25,11 @@ const getCategoryBadge = (category) => (
 );
 
 const getStatusBadge = (status) => {
+  // games.is_active is a plain boolean, so ACTIVE/INACTIVE are the only
+  // real states - no MAINTENANCE/COMING_SOON column exists.
   const colors = {
     ACTIVE: 'bg-green-100 text-green-800',
     INACTIVE: 'bg-red-100 text-red-800',
-    MAINTENANCE: 'bg-yellow-100 text-yellow-800',
-    COMING_SOON: 'bg-gray-100 text-gray-800',
   };
   return (
     <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status] || 'bg-gray-100 text-gray-800'}`}>
@@ -76,7 +75,7 @@ const BetLimitSettings = () => {
       await updateBetLimit(editingGame.id, form);
       setShowEditModal(false);
     } catch (err) {
-      setSaveError(err.graphQLErrors?.[0]?.message || err.message);
+      setSaveError(err.message);
     } finally {
       setSaving(false);
     }

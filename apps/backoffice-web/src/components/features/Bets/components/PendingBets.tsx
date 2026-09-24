@@ -6,11 +6,10 @@ import useBets from '../hooks/useBets';
 const GAME_CATEGORY_OPTIONS = [
   { value: 'all', label: 'All Games' },
   { value: 'SLOTS', label: 'Slots' },
-  { value: 'TABLE_GAMES', label: 'Table Games' },
   { value: 'LIVE_CASINO', label: 'Live Casino' },
-  { value: 'SPORTS', label: 'Sports' },
-  { value: 'VIRTUAL_SPORTS', label: 'Virtual Sports' },
-  { value: 'LOTTERY', label: 'Lottery' },
+  { value: 'GAME_SHOWS', label: 'Game Shows' },
+  { value: 'TABLE_GAMES', label: 'Table Games' },
+  { value: 'ORIGINALS', label: 'Originals' },
 ];
 
 const TIME_RANGE_MS = {
@@ -174,7 +173,7 @@ const PendingBets = ({ onSettleBet }: { onSettleBet?: any } = {}) => {
   const processedData = filteredBets.map((bet) => ({
     id: bet.id,
     select: renderSelectCheckbox(bet),
-    player: bet.user?.username ?? bet.userId,
+    player: bet.username,
     gameBadge: getGameTypeBadge(bet.gameCategory),
     type: bet.type,
     amountLabel: formatMoney(bet.amount),
@@ -221,7 +220,7 @@ const PendingBets = ({ onSettleBet }: { onSettleBet?: any } = {}) => {
             <div className="p-4">
               <h3 className="text-lg font-semibold mb-4">Bet Information</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div><span className="font-medium">Player:</span><span className="ml-2">{selectedBet.user?.username ?? selectedBet.userId}</span></div>
+                <div><span className="font-medium">Player:</span><span className="ml-2">{selectedBet.username}</span></div>
                 <div><span className="font-medium">Game:</span><span className="ml-2">{selectedBet.gameName || selectedBet.game?.name || selectedBet.gameCategory}</span></div>
                 <div><span className="font-medium">Bet Type:</span><span className="ml-2">{selectedBet.type}</span></div>
                 <div><span className="font-medium">Odds:</span><span className="ml-2">{selectedBet.odds}</span></div>

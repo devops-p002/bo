@@ -124,7 +124,7 @@ const BetSettlement = () => {
 
   const processedData = (bets || []).map((bet) => ({
     id: bet.id,
-    player: bet.user?.username ?? bet.userId,
+    player: bet.username,
     gameBadge: getGameBadge(bet.gameCategory),
     type: bet.type,
     amountLabel: formatMoney(bet.amount),
@@ -168,7 +168,7 @@ const BetSettlement = () => {
             <div className="p-4">
               <h3 className="text-lg font-semibold mb-4">Bet Information</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div><span className="font-medium">Player:</span><span className="ml-2">{selectedBet.user?.username ?? selectedBet.userId}</span></div>
+                <div><span className="font-medium">Player:</span><span className="ml-2">{selectedBet.username}</span></div>
                 <div><span className="font-medium">Game:</span><span className="ml-2">{selectedBet.gameName || selectedBet.gameCategory}</span></div>
                 <div><span className="font-medium">Bet Type:</span><span className="ml-2">{selectedBet.type}</span></div>
                 <div><span className="font-medium">Placed At:</span><span className="ml-2">{new Date(selectedBet.createdAt).toLocaleString()}</span></div>

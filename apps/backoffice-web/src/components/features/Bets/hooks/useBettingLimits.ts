@@ -1,94 +1,68 @@
-import { useCallback, useMemo, useState } from 'react';
-import { gql, useQuery, useMutation } from '@apollo/client';
+import { useCallback, useEffect, useState } from 'react';
+import { listGamesWithLimits, updateGameLimits } from '../../../../services/api/game-limits';
 
-// There is no dedicated "bet limits" model on the backend. The mock
-// gameType/minBet/maxBet/maxWin shape maps directly onto real fields that
-// already exist on the Game type (see server/src/graphql/schema/index.js),
-// so "bet limits" here means "per-game min/max bet and max win", read and
-// written through games() / updateGame().
-const GET_GAMES_WITH_LIMITS = gql`
-  query GamesWithLimits($filter: GameFilterInput, $pagination: PaginationInput) {
-    games(filter: $filter, pagination: $pagination) {
-      totalCount
-      nodes {
-        id
-        name
-        provider
-        category
-        status
-        minBet
-        maxBet
-        maxWin
-        currencies
-      }
-    }
-  }
-`;
-
-const UPDATE_GAME_LIMITS = gql`
-  mutation UpdateGameLimits($id: ID!, $input: UpdateGameInput!) {
-    updateGame(id: $id, input: $input) {
-      id
-      minBet
-      maxBet
-      maxWin
-    }
-  }
-`;
-
-const DEFAULT_PAGINATION = { page: 1, limit: 100 };
-
+// There is no dedicated "bet limits" model on the backend. The
+// gameType/minBet/maxBet/maxWin shape maps directly onto real fields on
+// the games table (see game-limits.service.ts), so "bet limits" here means
+// "per-game min/max bet and max win", read and written through GET/PATCH
+// /games - not full CMS games CRUD (that's a separate, not-yet-built
+// phase).
 const useBettingLimits = () => {
-  const [filter, setFilter] = useState(null);
-  const [pagination, setPagination] = useState(DEFAULT_PAGINATION);
+  const [category, setCategory] = useState<string | undefined>(undefined);
+  const [betLimits, setBetLimits] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // See useBets.js: the backend's `filter = {}` default parameter only
-  // applies when the argument is `undefined`, so an unset filter must be
-  // left out of variables rather than sent as an explicit null.
-  const variables = useMemo(
-    () => (filter ? { filter, pagination } : { pagination }),
-    [filter, pagination]
-  );
+  const load = useCallback(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    listGamesWithLimits(category)
+      .then((rows) => {
+        if (cancelled) return;
+        setBetLimits(rows);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [category]);
 
-  const gamesQuery = useQuery(GET_GAMES_WITH_LIMITS, {
-    variables,
-    fetchPolicy: 'cache-and-network',
-  });
+  useEffect(() => load(), [load]);
 
-  const [updateGameLimitsMutation] = useMutation(UPDATE_GAME_LIMITS);
-
-  // filter: { category, provider, status, search }
-  const fetchBetLimits = useCallback((nextFilter: any = {}, nextPagination?: any) => {
-    const clean = Object.fromEntries(
-      Object.entries(nextFilter).filter(([, v]) => v !== undefined && v !== null && v !== '' && v !== 'all')
-    );
-    setFilter(Object.keys(clean).length ? clean : null);
-    if (nextPagination) setPagination((prev) => ({ ...prev, ...nextPagination }));
+  // filter: { category, provider, status, search } - only category is a
+  // real, backend-supported filter; the others have no field to filter on.
+  const fetchBetLimits = useCallback((filter: any = {}) => {
+    setCategory(filter.category || undefined);
   }, []);
 
   const updateBetLimit = useCallback(
-    async (gameId: any, { minBet, maxBet, maxWin }: any) => {
+    async (gameId: string, { minBet, maxBet, maxWin }: any) => {
       const input: any = {};
-      if (minBet !== undefined && minBet !== '') input.minBet = parseFloat(minBet);
-      if (maxBet !== undefined && maxBet !== '') input.maxBet = parseFloat(maxBet);
-      if (maxWin !== undefined && maxWin !== '') input.maxWin = parseFloat(maxWin);
-      const { data } = await updateGameLimitsMutation({ variables: { id: gameId, input } });
-      await gamesQuery.refetch();
-      return data?.updateGame;
+      if (minBet !== undefined && minBet !== '') input.minBet = Number.parseFloat(minBet);
+      if (maxBet !== undefined && maxBet !== '') input.maxBet = Number.parseFloat(maxBet);
+      if (maxWin !== undefined && maxWin !== '') input.maxWin = Number.parseFloat(maxWin);
+      const data = await updateGameLimits(gameId, input);
+      load();
+      return data;
     },
-    [updateGameLimitsMutation, gamesQuery]
+    [load],
   );
-
-  const betLimits = gamesQuery.data?.games?.nodes ?? [];
 
   return {
     betLimits,
-    totalCount: gamesQuery.data?.games?.totalCount ?? 0,
-    loading: gamesQuery.loading,
-    error: gamesQuery.error?.message || null,
+    totalCount: betLimits.length,
+    loading,
+    error,
     fetchBetLimits,
     updateBetLimit,
-    refetch: gamesQuery.refetch,
+    refetch: load,
   };
 };
 

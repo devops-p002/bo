@@ -1,178 +1,131 @@
-import { useCallback, useMemo, useState } from 'react';
-import { gql, useQuery, useMutation } from '@apollo/client';
-
-// Real Bet fields from server/src/graphql/schema/index.js - no fabricated fields.
-const BET_FIELDS = gql`
-  fragment BetFields on Bet {
-    id
-    userId
-    gameId
-    type
-    status
-    amount
-    currency
-    odds
-    potentialWin
-    winAmount
-    gameProvider
-    gameCategory
-    gameName
-    riskScore
-    riskFlags
-    ipAddress
-    selections
-    result
-    voidReason
-    createdAt
-    settledAt
-    user {
-      username
-    }
-    game {
-      name
-    }
-  }
-`;
-
-const GET_BETS = gql`
-  query BetsList($filter: BetFilterInput, $pagination: PaginationInput) {
-    bets(filter: $filter, pagination: $pagination) {
-      totalCount
-      nodes {
-        ...BetFields
-      }
-      pageInfo {
-        hasNextPage
-        hasPreviousPage
-      }
-    }
-  }
-  ${BET_FIELDS}
-`;
-
-const GET_PENDING_BETS = gql`
-  query PendingBetsList($pagination: PaginationInput) {
-    pendingBets(pagination: $pagination) {
-      totalCount
-      nodes {
-        ...BetFields
-      }
-    }
-  }
-  ${BET_FIELDS}
-`;
-
-const SETTLE_BET = gql`
-  mutation SettleBet($id: ID!, $winAmount: Float!, $result: JSON) {
-    settleBet(id: $id, winAmount: $winAmount, result: $result) {
-      id
-      status
-      winAmount
-      settledAt
-      result
-    }
-  }
-`;
-
-const CANCEL_BET = gql`
-  mutation CancelBet($id: ID!, $reason: String!) {
-    cancelBet(id: $id, reason: $reason) {
-      id
-      status
-    }
-  }
-`;
-
-const VOID_BET = gql`
-  mutation VoidBet($id: ID!, $reason: String!) {
-    voidBet(id: $id, reason: $reason) {
-      id
-      status
-      voidReason
-    }
-  }
-`;
+import { useCallback, useEffect, useState } from 'react';
+import { listBets, updateBetStatus } from '../../../../services/api/bets';
 
 const DEFAULT_PAGINATION = { page: 1, limit: 50 };
 
+// filter: { status, gameCategory, playerId, search, minAmount, maxAmount,
+// dateRange: { start, end } } -> the flat query params GET /bets accepts.
+function toApiFilter(filter: any) {
+  const apiFilter: any = {};
+  if (filter.status) apiFilter.status = filter.status;
+  if (filter.gameCategory) apiFilter.gameCategory = filter.gameCategory;
+  if (filter.playerId) apiFilter.playerId = filter.playerId;
+  if (filter.search) apiFilter.search = filter.search;
+  if (filter.minAmount !== undefined) apiFilter.minAmount = filter.minAmount;
+  if (filter.maxAmount !== undefined) apiFilter.maxAmount = filter.maxAmount;
+  if (filter.dateRange) {
+    apiFilter.dateRangeStart = filter.dateRange.start;
+    apiFilter.dateRangeEnd = filter.dateRange.end;
+  }
+  return apiFilter;
+}
+
 /**
- * Wires the Bets feature to the real backend:
- * - Query.bets / Query.pendingBets for listing
- * - Mutation.settleBet / cancelBet / voidBet for settlement actions
- *
- * Variables objects are memoized (see gotcha: an inline object literal makes
- * useQuery think variables changed every render, causing an infinite
- * refetch loop).
+ * Wires the Bets feature to the real backend (GET/PATCH /bets). Each
+ * useBets() call keeps its own filter/pagination state and fetches
+ * automatically whenever that state changes - fetchBets/fetchPendingBets
+ * are just setters, same shape as the previous Apollo-backed version so
+ * BetsPage's own instance (which never calls them, only reads the
+ * result) still gets real data on mount.
  */
 const useBets = () => {
-  const [betsFilter, setBetsFilter] = useState(null);
+  const [betsFilter, setBetsFilterState] = useState<any>({});
   const [betsPagination, setBetsPagination] = useState(DEFAULT_PAGINATION);
   const [pendingPagination, setPendingPagination] = useState(DEFAULT_PAGINATION);
 
-  // The backend resolves `filter` via a JS default parameter (`filter = {}`),
-  // which only kicks in when the argument is `undefined` - an explicit
-  // `null` (which is what Apollo would send for `filter: null`) reaches the
-  // resolver as `null` and crashes on `filter.category`/`filter.status`. So
-  // when there is no filter, the key must be left out of variables
-  // entirely rather than set to null.
-  const betsVariables = useMemo(
-    () => (betsFilter ? { filter: betsFilter, pagination: betsPagination } : { pagination: betsPagination }),
-    [betsFilter, betsPagination]
-  );
-  const pendingVariables = useMemo(
-    () => ({ pagination: pendingPagination }),
-    [pendingPagination]
-  );
+  const [bets, setBets] = useState<any[]>([]);
+  const [betsTotalCount, setBetsTotalCount] = useState(0);
+  const [betsLoading, setBetsLoading] = useState(false);
+  const [betsError, setBetsError] = useState<string | null>(null);
 
-  const betsQuery = useQuery(GET_BETS, {
-    variables: betsVariables,
-    fetchPolicy: 'cache-and-network',
-  });
-  const pendingQuery = useQuery(GET_PENDING_BETS, {
-    variables: pendingVariables,
-    fetchPolicy: 'cache-and-network',
-  });
+  const [pendingBets, setPendingBets] = useState<any[]>([]);
+  const [pendingTotalCount, setPendingTotalCount] = useState(0);
+  const [pendingLoading, setPendingLoading] = useState(false);
+  const [pendingError, setPendingError] = useState<string | null>(null);
 
-  const [settleBetMutation] = useMutation(SETTLE_BET);
-  const [cancelBetMutation] = useMutation(CANCEL_BET);
-  const [voidBetMutation] = useMutation(VOID_BET);
+  const loadBets = useCallback(() => {
+    let cancelled = false;
+    setBetsLoading(true);
+    setBetsError(null);
+    listBets(toApiFilter(betsFilter), betsPagination)
+      .then((data) => {
+        if (cancelled) return;
+        setBets(data.nodes);
+        setBetsTotalCount(data.totalCount);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setBetsError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setBetsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [betsFilter, betsPagination]);
 
-  // filter: { status, userId, gameId, minAmount, maxAmount, dateRange }
-  const fetchBets = useCallback((filter = {}, pagination) => {
-    setBetsFilter(Object.keys(filter).length ? filter : null);
+  useEffect(() => loadBets(), [loadBets]);
+
+  const loadPendingBets = useCallback(() => {
+    let cancelled = false;
+    setPendingLoading(true);
+    setPendingError(null);
+    listBets({ status: 'PENDING' }, pendingPagination)
+      .then((data) => {
+        if (cancelled) return;
+        setPendingBets(data.nodes);
+        setPendingTotalCount(data.totalCount);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setPendingError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setPendingLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pendingPagination]);
+
+  useEffect(() => loadPendingBets(), [loadPendingBets]);
+
+  const fetchBets = useCallback((filter: any = {}, pagination?: any) => {
+    setBetsFilterState(filter);
     if (pagination) setBetsPagination((prev) => ({ ...prev, ...pagination }));
   }, []);
 
-  const fetchPendingBets = useCallback((pagination) => {
+  const fetchPendingBets = useCallback((pagination?: any) => {
     if (pagination) setPendingPagination((prev) => ({ ...prev, ...pagination }));
   }, []);
 
-  const refetchAll = useCallback(async () => {
-    await Promise.all([betsQuery.refetch(), pendingQuery.refetch()]);
-  }, [betsQuery, pendingQuery]);
+  const refetchAll = useCallback(() => {
+    loadBets();
+    loadPendingBets();
+  }, [loadBets, loadPendingBets]);
 
   const cancelBet = useCallback(
-    async (betId, reason = 'Cancelled by administrator') => {
-      const { data } = await cancelBetMutation({ variables: { id: betId, reason } });
-      await refetchAll();
-      return data?.cancelBet;
+    async (betId: string, reason = 'Cancelled by administrator') => {
+      const data = await updateBetStatus(betId, { status: 'CANCELLED', voidReason: reason });
+      refetchAll();
+      return data;
     },
-    [cancelBetMutation, refetchAll]
+    [refetchAll],
   );
 
-  // outcome: 'won' | 'lost' | 'push' | 'cancelled'. Maps onto the real
-  // settleBet(winAmount, result) / cancelBet(reason) mutations - there is no
-  // separate "outcome" concept on the backend, so it is derived here.
+  // outcome: 'won' | 'lost' | 'push' | 'cancelled'. All settle down to the
+  // same SETTLED status - "won"/"lost"/"push" only affects winAmount and
+  // the recorded result, there's no separate won/lost status on the row.
   const settleBet = useCallback(
-    async (betId: any, outcome: any, extra: any = {}) => {
+    async (betId: string, outcome: string, extra: any = {}) => {
       if (outcome === 'cancelled') {
         return cancelBet(betId, extra.notes || 'Cancelled by administrator');
       }
-      const bet = [...(betsQuery.data?.bets?.nodes || []), ...(pendingQuery.data?.pendingBets?.nodes || [])]
-        .find((b) => b.id === betId);
-      let winAmount;
+      const bet = [...bets, ...pendingBets].find((b) => b.id === betId);
+      let winAmount: number;
       if (extra.winAmount !== undefined && extra.winAmount !== '' && extra.winAmount !== null) {
-        winAmount = parseFloat(extra.winAmount);
+        winAmount = Number.parseFloat(extra.winAmount);
       } else if (outcome === 'won') {
         winAmount = bet?.potentialWin ?? 0;
       } else if (outcome === 'push') {
@@ -180,58 +133,53 @@ const useBets = () => {
       } else {
         winAmount = 0;
       }
-      const { data } = await settleBetMutation({
-        variables: {
-          id: betId,
-          winAmount,
-          result: { outcome: outcome ? outcome.toUpperCase() : 'SETTLED', notes: extra.notes || null },
-        },
+      const data = await updateBetStatus(betId, {
+        status: 'SETTLED',
+        winAmount,
+        result: { outcome: outcome ? outcome.toUpperCase() : 'SETTLED', notes: extra.notes || null },
       });
-      await refetchAll();
-      return data?.settleBet;
+      refetchAll();
+      return data;
     },
-    [betsQuery.data, pendingQuery.data, settleBetMutation, refetchAll, cancelBet]
+    [bets, pendingBets, cancelBet, refetchAll],
   );
 
   const voidBet = useCallback(
-    async (betId, reason = 'Voided by administrator') => {
-      const { data } = await voidBetMutation({ variables: { id: betId, reason } });
-      await refetchAll();
-      return data?.voidBet;
+    async (betId: string, reason = 'Voided by administrator') => {
+      const data = await updateBetStatus(betId, { status: 'VOID', voidReason: reason });
+      refetchAll();
+      return data;
     },
-    [voidBetMutation, refetchAll]
+    [refetchAll],
   );
 
-  // action: 'won' | 'lost' | 'void'. Runs the matching single mutation for
-  // each selected bet (no dedicated bulk mutation exists on the backend).
+  // action: 'won' | 'lost' | 'void'. Runs the matching single update for
+  // each selected bet (no dedicated bulk endpoint exists on the backend).
   const bulkSettleBets = useCallback(
-    async (betIds, action) => {
+    async (betIds: string[], action: string) => {
       if (action === 'void') {
-        await Promise.all(betIds.map((id) => voidBetMutation({ variables: { id, reason: 'Bulk void by administrator' } })));
+        await Promise.all(betIds.map((id) => updateBetStatus(id, { status: 'VOID', voidReason: 'Bulk void by administrator' })));
       } else {
         await Promise.all(
           betIds.map((id) => {
-            const bet = [...(betsQuery.data?.bets?.nodes || []), ...(pendingQuery.data?.pendingBets?.nodes || [])]
-              .find((b) => b.id === id);
-            const winAmount = action === 'won' ? bet?.potentialWin ?? 0 : 0;
-            return settleBetMutation({
-              variables: { id, winAmount, result: { outcome: action.toUpperCase(), notes: 'Bulk settlement' } },
-            });
-          })
+            const bet = [...bets, ...pendingBets].find((b) => b.id === id);
+            const winAmount = action === 'won' ? (bet?.potentialWin ?? 0) : 0;
+            return updateBetStatus(id, { status: 'SETTLED', winAmount, result: { outcome: action.toUpperCase(), notes: 'Bulk settlement' } });
+          }),
         );
       }
-      await refetchAll();
+      refetchAll();
     },
-    [betsQuery.data, pendingQuery.data, settleBetMutation, voidBetMutation, refetchAll]
+    [bets, pendingBets, refetchAll],
   );
 
   return {
-    bets: betsQuery.data?.bets?.nodes ?? [],
-    betsTotalCount: betsQuery.data?.bets?.totalCount ?? 0,
-    pendingBets: pendingQuery.data?.pendingBets?.nodes ?? [],
-    pendingTotalCount: pendingQuery.data?.pendingBets?.totalCount ?? 0,
-    loading: betsQuery.loading || pendingQuery.loading,
-    error: betsQuery.error?.message || pendingQuery.error?.message || null,
+    bets,
+    betsTotalCount,
+    pendingBets,
+    pendingTotalCount,
+    loading: betsLoading || pendingLoading,
+    error: betsError || pendingError,
     fetchBets,
     fetchPendingBets,
     settleBet,

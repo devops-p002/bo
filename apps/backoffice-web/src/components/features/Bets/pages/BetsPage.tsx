@@ -225,7 +225,7 @@ const BetsPage = () => {
                 </div>
                 <div>
                   <span className="text-gray-600">Player:</span>
-                  <span className="ml-2 font-medium">{selectedBet.user?.username ?? selectedBet.userId}</span>
+                  <span className="ml-2 font-medium">{selectedBet.username}</span>
                 </div>
                 <div>
                   <span className="text-gray-600">Game:</span>
