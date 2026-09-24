@@ -3,6 +3,7 @@ import ComponentTemplate from '../ComponentTemplate';
 import { Modal, Button, Breadcrumb } from '../../common/UI';
 import { Input, Select } from '../../common/Forms';
 import { useNotification } from '../../../context/NotificationContext';
+import { useTheme } from '../../../context/ThemeContext';
 import {
   addGroupMember,
   createMemberGroup,
@@ -25,6 +26,7 @@ const EMPTY_FORM = { name: '', category: '', status: 'ACTIVE' };
 
 const MemberGroup = () => {
   const { success, error: notifyError } = useNotification();
+  const { isDarkTheme } = useTheme();
   const [groups, setGroups] = useState<MemberGroupRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -194,7 +196,7 @@ const MemberGroup = () => {
   ];
 
   return (
-    <>
+    <div className={`p-3 ${isDarkTheme ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
       <div className="mb-3">
         <Breadcrumb />
       </div>
@@ -310,7 +312,7 @@ const MemberGroup = () => {
           )}
         </div>
       </Modal>
-    </>
+    </div>
   );
 };
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ComponentTemplate from '../ComponentTemplate';
 import { Breadcrumb } from '../../common/UI';
+import { useTheme } from '../../../context/ThemeContext';
 import { listPlayers } from '../../../services/api/players';
 
 // Real backend field: Player.vipLevel (BRONZE/SILVER/GOLD/PLATINUM/DIAMOND).
@@ -10,6 +11,7 @@ import { listPlayers } from '../../../services/api/players';
 const VIP_LEVELS = ['DIAMOND', 'PLATINUM', 'GOLD', 'SILVER', 'BRONZE'];
 
 const MemberVIP = () => {
+  const { isDarkTheme } = useTheme();
   const [players, setPlayers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +54,7 @@ const MemberVIP = () => {
   const columns = ['Username', 'VIP Level', 'Balance'];
 
   return (
-    <>
+    <div className={`p-3 ${isDarkTheme ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
       <div className="mb-3">
         <Breadcrumb />
       </div>
@@ -67,7 +69,7 @@ const MemberVIP = () => {
         error={error ? `Failed to load members: ${error}` : null}
         hasAddButton={false}
       />
-    </>
+    </div>
   );
 };
 

@@ -3,6 +3,7 @@ import ComponentTemplate from '../ComponentTemplate';
 import { Modal, Button, Breadcrumb } from '../../common/UI';
 import { Input, Select } from '../../common/Forms';
 import { useNotification } from '../../../context/NotificationContext';
+import { useTheme } from '../../../context/ThemeContext';
 import { createBulkOperation, listBulkOperations, type BulkOperation } from '../../../services/api/bulk-operations';
 import { listPlayers } from '../../../services/api/players';
 
@@ -36,6 +37,7 @@ const OPERATION_TYPE_LABELS: Record<string, string> = {
 
 const MemberMassUpdate = () => {
   const { success, error: notifyError } = useNotification();
+  const { isDarkTheme } = useTheme();
   const [operations, setOperations] = useState<BulkOperation[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -205,7 +207,7 @@ const MemberMassUpdate = () => {
   };
 
   return (
-    <>
+    <div className={`p-3 ${isDarkTheme ? 'bg-gray-900' : 'bg-gray-50'} min-h-screen`}>
       <div className="mb-3">
         <Breadcrumb />
       </div>
@@ -294,7 +296,7 @@ const MemberMassUpdate = () => {
           </div>
         </div>
       </Modal>
-    </>
+    </div>
   );
 };
 
