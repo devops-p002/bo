@@ -56,7 +56,7 @@ const StatsCard = ({
             )}
           </div>
           {icon && (
-            <div className={`p-3 rounded-full ${iconClassName || 'bg-blue-100 text-blue-600'}`}>
+            <div className={`p-3 rounded-full ${iconClassName || 'bg-primary-100 text-primary-600'}`}>
               {icon}
             </div>
           )}

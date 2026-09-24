@@ -41,7 +41,7 @@ const Header = ({ onToggleSidebar }) => {
   };
   
   return (
-    <header className={`${isDarkTheme ? 'bg-gray-800 border-gray-700' : 'bg-gray-800 border-gray-700'} border-b shadow-sm z-10`}>
+    <header className={`${isDarkTheme ? 'bg-navy-900 border-navy-700' : 'bg-navy-900 border-navy-700'} border-b shadow-sm z-10`}>
       <div className="flex items-center justify-between px-4 py-1.5">
         {/* Left side */}
         <div className="flex items-center">

@@ -132,8 +132,8 @@ const Navigation = ({ items, isCollapsed = false }) => {
             className={`
               w-full flex items-center justify-between px-4 py-2 rounded-md transition-colors text-left text-xs
               ${isActive || hasActiveChild || isExpanded
-                ? 'bg-gray-700 text-white' 
-                : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
+                ? 'bg-primary-600 text-white' 
+                : 'text-gray-300 hover:bg-navy-700 hover:text-white'}
               ${isSubItem ? 'pl-8' : ''}
             `}
           >
@@ -160,7 +160,7 @@ const Navigation = ({ items, isCollapsed = false }) => {
           
           {isExpanded && (
             <div className="overflow-hidden transition-all duration-300 ease-in-out">
-              <ul className="mt-2 mb-2 space-y-1 border-l-2 border-gray-600 ml-4 pl-2">
+              <ul className="mt-2 mb-2 space-y-1 border-l-2 border-navy-700 ml-4 pl-2">
                 {item.children.map((child) => (
                   <NavigationItem
                     key={child.title}
@@ -184,8 +184,8 @@ const Navigation = ({ items, isCollapsed = false }) => {
             className={`
               flex items-center rounded-md transition-colors relative group
               ${isActive || hasActiveChild
-                ? 'bg-gray-700 text-white' 
-                : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
+                ? 'bg-primary-600 text-white' 
+                : 'text-gray-300 hover:bg-navy-700 hover:text-white'}
               px-2 py-3 justify-center
             `}
             title={`${item.title} - Go to ${item.children[0]?.title || 'first section'}`}
@@ -193,7 +193,7 @@ const Navigation = ({ items, isCollapsed = false }) => {
             <span>{getIcon(item.icon)}</span>
             
             {/* Enhanced tooltip for collapsed state with first sub-section info */}
-            <div className="absolute left-full ml-2 px-3 py-2 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-lg">
+            <div className="absolute left-full ml-2 px-3 py-2 bg-navy-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-lg">
               <div className="font-semibold">{item.title}</div>
               <div className="text-gray-300 text-xs mt-1">→ {item.children[0]?.title || 'Go to first section'}</div>
             </div>
@@ -209,10 +209,10 @@ const Navigation = ({ items, isCollapsed = false }) => {
           className={`
             flex items-center rounded-md transition-colors relative group
             ${isActive 
-              ? 'bg-gray-700 text-white' 
-              : 'text-gray-300 hover:bg-gray-700 hover:text-white'}
+              ? 'bg-primary-600 text-white' 
+              : 'text-gray-300 hover:bg-navy-700 hover:text-white'}
             ${isCollapsed && !isSubItem ? 'px-2 py-3 justify-center' : 'px-4 py-2'}
-            ${isSubItem ? 'pl-6 ml-2 mr-2 bg-gray-800 hover:bg-gray-600 border-l-2 border-gray-600 text-xs' : 'text-xs'}
+            ${isSubItem ? 'pl-6 ml-2 mr-2 bg-navy-800 hover:bg-navy-700 border-l-2 border-navy-700 text-xs' : 'text-xs'}
           `}
           title={isCollapsed ? item.title : ''}
         >
@@ -235,7 +235,7 @@ const Navigation = ({ items, isCollapsed = false }) => {
           
           {/* Tooltip for collapsed state */}
           {isCollapsed && !isSubItem && (
-            <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+            <div className="absolute left-full ml-2 px-2 py-1 bg-navy-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
               {item.title}
             </div>
           )}

@@ -26,15 +26,15 @@ const Button = forwardRef<HTMLButtonElement, any>(({
   
   // Variant classes
   const variantClasses = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50',
+    primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-opacity-50',
     secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50',
-    success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-opacity-50',
-    danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-opacity-50',
-    warning: 'bg-yellow-500 text-white hover:bg-yellow-600 focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-50',
-    info: 'bg-cyan-500 text-white hover:bg-cyan-600 focus:ring-2 focus:ring-cyan-400 focus:ring-opacity-50',
+    success: 'bg-success text-white hover:opacity-90 focus:ring-2 focus:ring-success focus:ring-opacity-50',
+    danger: 'bg-error text-white hover:opacity-90 focus:ring-2 focus:ring-error focus:ring-opacity-50',
+    warning: 'bg-warning text-white hover:opacity-90 focus:ring-2 focus:ring-warning focus:ring-opacity-50',
+    info: 'bg-primary-500 text-white hover:bg-primary-600 focus:ring-2 focus:ring-primary-400 focus:ring-opacity-50',
     light: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100 focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50',
-    dark: 'bg-gray-800 text-white hover:bg-gray-900 focus:ring-2 focus:ring-gray-700 focus:ring-opacity-50',
-    link: 'bg-transparent text-blue-600 hover:text-blue-800 hover:underline',
+    dark: 'bg-navy-900 text-white hover:bg-navy-800 focus:ring-2 focus:ring-navy-700 focus:ring-opacity-50',
+    link: 'bg-transparent text-primary-600 hover:text-primary-800 hover:underline',
   };
   
   // States
