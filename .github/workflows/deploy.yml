@@ -54,6 +54,34 @@ jobs:
       # (POSTGRES_ADMIN_PASSWORD, SERVICE_DB_PASSWORD_BACKOFFICE_API,
       # ADMIN_JWT_SECRET, ...) live in ~/bo-secrets/.env, outside any repo
       # checkout, created once by hand on the VM and never touched by CI.
+      # TEMPORARY - diagnosing why PLAYER_JWT_SECRET keeps showing as
+      # missing to docker compose despite being confirmed present in the
+      # file the user is editing. Prints no secret values, only whether
+      # each expected key is found, its declared length, and whether the
+      # file has Windows line endings (a `\r` at end-of-line would land
+      # inside the value and make it fail dotenv parsing invisibly).
+      # Remove this step once the real cause is found.
+      - name: DEBUG secrets file
+        run: |
+          echo "whoami: $(whoami)"
+          echo "HOME: $HOME"
+          echo "file: $HOME/bo-secrets/.env"
+          ls -la "$HOME/bo-secrets/.env" || echo "FILE NOT FOUND"
+          echo "--- key presence (no values) ---"
+          for key in POSTGRES_ADMIN_PASSWORD SERVICE_DB_PASSWORD_BACKOFFICE_API ADMIN_JWT_SECRET SERVICE_DB_PASSWORD_PLAYER_API PLAYER_JWT_SECRET; do
+            line=$(grep -n "^${key}=" "$HOME/bo-secrets/.env" || true)
+            if [ -z "$line" ]; then
+              echo "$key: NOT FOUND"
+            else
+              lineno=$(echo "$line" | cut -d: -f1)
+              val=$(echo "$line" | cut -d: -f2- | cut -d= -f2-)
+              echo "$key: found on line $lineno, length=${#val}"
+            fi
+          done
+          echo "--- CRLF check ---"
+          crlf_count=$(grep -c $'\r' "$HOME/bo-secrets/.env" || true)
+          echo "lines with carriage return: $crlf_count"
+
       - name: build images
         run: docker compose --env-file "$HOME/bo-secrets/.env" -p bo build
 
