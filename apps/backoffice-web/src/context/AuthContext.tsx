@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { gql, useApolloClient } from '@apollo/client';
 
 // Create the context
 const AuthContext = createContext<any>(undefined);
@@ -14,56 +13,15 @@ export const useAuth = () => {
   return context;
 };
 
-const USER_FIELDS = `
-  id
-  username
-  email
-  firstName
-  lastName
-  fullName
-  role
-  status
-  vipLevel
-  balance
-`;
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-const LOGIN_MUTATION = gql`
-  mutation Login($email: String!, $password: String!) {
-    login(email: $email, password: $password) {
-      token
-      refreshToken
-      user {
-        ${USER_FIELDS}
-      }
-    }
-  }
-`;
-
-const LOGOUT_MUTATION = gql`
-  mutation Logout {
-    logout
-  }
-`;
-
-const ME_QUERY = gql`
-  query Me {
-    me {
-      ${USER_FIELDS}
-    }
-  }
-`;
-
-// The backend's User.role/status/vipLevel are GraphQL enums (SCREAMING_CASE,
-// e.g. "SUPER_ADMIN"), but the rest of this app (ProtectedRoute's
-// `user.status !== 'active'` check, role checks, etc.) was written expecting
-// lowercase values. Normalize once here at the API boundary.
-//
-// The backend also has no granular `permissions` field on User (it enforces
-// a smaller role -> permission-string map server-side, in
-// server/src/config/index.js). The UI here was built against a much more
-// granular permission list, so we grant the full set client-side to any
-// authenticated user; server-side resolvers remain the real enforcement
-// point regardless of what the UI shows/hides.
+// backoffice-api has no granular `permissions` field on an admin user -
+// it enforces a fixed role -> owned-action-type map server-side
+// (ACTION_TYPE_OWNING_ROLE in services/backoffice-api/src/roles.ts).
+// The UI here was built against a much more granular permission list,
+// so we grant the full set client-side to any authenticated user;
+// server-side RBAC (RolesGuard, maker-checker's ownership check) remains
+// the real enforcement point regardless of what the UI shows/hides.
 const FULL_PERMISSIONS = [
   'dashboard.view',
   'members.view', 'members.group.manage', 'members.vip.manage', 'members.mass.update',
@@ -84,14 +42,46 @@ const FULL_PERMISSIONS = [
   'notifications.view',
 ];
 
-const normalizeUser = (user: any) => ({
-  ...user,
-  role: user.role?.toLowerCase(),
-  status: user.status?.toLowerCase(),
-  vipLevel: user.vipLevel?.toLowerCase(),
-  name: user.fullName || user.username,
-  permissions: FULL_PERMISSIONS,
-});
+const STORED_SESSION_KEY = 'bo_admin_session_user';
+
+// The session's actual source of truth is the httpOnly cookie
+// backoffice-api sets on login - this app's own JS can never read it
+// (deliberately, so an XSS bug here can't exfiltrate it). What's stored
+// here is just enough non-sensitive profile info (adminUserId + roles)
+// to render the right UI immediately on page reload without a network
+// round trip; it grants no access on its own, and any API call that
+// actually needs the cookie simply 401s once the real session expires
+// or is revoked - see apiFetch's own handling of that below.
+function normalizeSession(session: { adminUserId: string; roles: string[]; email?: string }) {
+  return {
+    id: session.adminUserId,
+    email: session.email ?? '',
+    roles: session.roles,
+    role: session.roles[0]?.toLowerCase(),
+    status: 'active',
+    name: session.email || session.adminUserId,
+    permissions: FULL_PERMISSIONS,
+  };
+}
+
+// Exported for later pages to call once they're wired to the real API -
+// on a 401 (cookie missing/expired/revoked), it clears the locally
+// cached profile so the UI stops claiming to be logged in, but it does
+// NOT redirect itself: a page mid-render is better placed to decide
+// how to surface that (e.g. ProtectedRoute's own redirect-to-/login on
+// its next check) than a shared fetch helper forcing a hard navigation
+// out from under it.
+export async function apiFetch(path: string, options: RequestInit = {}) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    credentials: 'include',
+    headers: { 'content-type': 'application/json', ...options.headers },
+  });
+  if (response.status === 401) {
+    localStorage.removeItem(STORED_SESSION_KEY);
+  }
+  return response;
+}
 
 // Provider component
 export const AuthProvider = ({ children }: any) => {
@@ -99,70 +89,47 @@ export const AuthProvider = ({ children }: any) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
   const navigate = useNavigate();
-  const apolloClient = useApolloClient();
 
-  // Check if user is already logged in (on app load)
+  // Restore the last known session's non-sensitive profile info on page
+  // load - real authorization is still decided per-request by the
+  // cookie, not by this. See normalizeSession's own comment.
   useEffect(() => {
-    const checkAuthStatus = async () => {
-      const token = localStorage.getItem('authToken');
-
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
+    const stored = localStorage.getItem(STORED_SESSION_KEY);
+    if (stored) {
       try {
-        setLoading(true);
-        const { data } = await apolloClient.query({
-          query: ME_QUERY,
-          fetchPolicy: 'network-only',
-        });
-
-        if (data?.me) {
-          setUser(normalizeUser(data.me));
-        } else {
-          // Token no longer maps to a user (e.g. deleted account)
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('refreshToken');
-        }
-      } catch (err) {
-        console.error('Auth status check failed:', err);
-        setError(err);
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('refreshToken');
-      } finally {
-        setLoading(false);
+        setUser(JSON.parse(stored));
+      } catch {
+        localStorage.removeItem(STORED_SESSION_KEY);
       }
-    };
-
-    checkAuthStatus();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }
+    setLoading(false);
   }, []);
 
   // Login function
-  const login = async (email: any, password: any) => {
+  const login = async (email: string, password: string) => {
     try {
       setLoading(true);
       setError(null);
 
-      const { data } = await apolloClient.mutate({
-        mutation: LOGIN_MUTATION,
-        variables: { email, password },
+      const response = await apiFetch('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
       });
 
-      const { token, refreshToken, user: loggedInUser } = data.login;
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.message || 'Invalid email or password');
+      }
 
-      localStorage.setItem('authToken', token);
-      localStorage.setItem('refreshToken', refreshToken);
-
-      const normalized = normalizeUser(loggedInUser);
+      const data = await response.json();
+      const normalized = normalizeSession({ adminUserId: data.adminUserId, roles: data.roles, email });
+      localStorage.setItem(STORED_SESSION_KEY, JSON.stringify(normalized));
       setUser(normalized);
       setLoading(false);
 
       return normalized;
-    } catch (err) {
-      const message = err.graphQLErrors?.[0]?.message || err.message || 'Login failed. Please try again.';
-      console.error('Login failed:', message);
+    } catch (err: any) {
+      const message = err.message || 'Login failed. Please try again.';
       setError(message);
       setLoading(false);
       throw new Error(message);
@@ -171,14 +138,13 @@ export const AuthProvider = ({ children }: any) => {
 
   // Logout function
   const logout = () => {
-    // Best-effort: tell the server, but don't block clearing local session on it.
-    apolloClient.mutate({ mutation: LOGOUT_MUTATION }).catch((err) => {
-      console.warn('Logout mutation failed (clearing local session anyway):', err.message);
+    // Best-effort: tell the server to revoke the session, but don't
+    // block clearing local state on it.
+    apiFetch('/auth/logout', { method: 'POST' }).catch((err) => {
+      console.warn('Logout request failed (clearing local session anyway):', err.message);
     });
 
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('refreshToken');
-    apolloClient.clearStore().catch(() => {});
+    localStorage.removeItem(STORED_SESSION_KEY);
     setUser(null);
     navigate('/login');
   };

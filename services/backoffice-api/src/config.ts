@@ -9,6 +9,13 @@ const schema = z.object({
   ADMIN_JWT_SECRET: nonEmptyString,
   ADMIN_ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().int().positive().default(900),
 
+  // apps/backoffice-web is a plain Vite SPA with no server of its own,
+  // served from a different subdomain than this API - the browser needs
+  // an explicit CORS allow-list (with credentials, for the session
+  // cookie) rather than same-origin trust a Next.js API-route proxy
+  // would have given it.
+  CORS_ORIGIN: nonEmptyString.default('https://admin.sunrion.online'),
+
   // Downstream services maker-checker approval actually executes
   // against.
   LEDGER_BASE_URL: url.default('http://localhost:4100'),

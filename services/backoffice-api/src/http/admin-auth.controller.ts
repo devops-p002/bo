@@ -1,7 +1,13 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Inject, Post, Req, Res, UseGuards } from '@nestjs/common';
+import type { FastifyReply } from 'fastify';
 import { AdminAuthService } from '../admin-auth.service.js';
+import { BACKOFFICE_CONFIG } from '../config.js';
+import type { BackofficeConfig } from '../config.js';
 import type { CreateAdminUserDto, LoginDto } from './dto.js';
 import { createAdminUserSchema, loginSchema } from './dto.js';
+import type { AuthenticatedAdminRequest } from './jwt-auth.guard.js';
+import { JwtAuthGuard } from './jwt-auth.guard.js';
+import { SESSION_COOKIE_NAME } from './tokens.js';
 import { ZodValidationPipe } from './zod-validation.pipe.js';
 
 /** Admin-user creation is intentionally open here, the same "no auth,
@@ -23,10 +29,38 @@ export class AdminAuthController {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly adminAuth: AdminAuthService) {}
+  constructor(
+    private readonly adminAuth: AdminAuthService,
+    @Inject(BACKOFFICE_CONFIG) private readonly config: BackofficeConfig,
+  ) {}
 
   @Post('login')
-  async login(@Body(new ZodValidationPipe(loginSchema)) body: LoginDto) {
-    return this.adminAuth.login(body.email, body.password);
+  async login(@Body(new ZodValidationPipe(loginSchema)) body: LoginDto, @Res({ passthrough: true }) reply: FastifyReply) {
+    const result = await this.adminAuth.login(body.email, body.password);
+
+    // httpOnly so apps/backoffice-web's own JS can never read the token
+    // (defense against XSS exfiltrating it, the whole point of moving
+    // off localStorage) - SameSite=None;Secure because the frontend
+    // (admin.sunrion.online) and this API (api-admin.sunrion.online) are
+    // different subdomains, which the browser treats as cross-site.
+    reply.setCookie(SESSION_COOKIE_NAME, result.accessToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      path: '/',
+      maxAge: this.config.ADMIN_ACCESS_TOKEN_TTL_SECONDS,
+    });
+
+    return result;
+  }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  async logout(@Req() req: AuthenticatedAdminRequest, @Res({ passthrough: true }) reply: FastifyReply) {
+    if (req.sessionId) {
+      await this.adminAuth.logout(req.sessionId);
+    }
+    reply.clearCookie(SESSION_COOKIE_NAME, { path: '/' });
+    return { ok: true };
   }
 }

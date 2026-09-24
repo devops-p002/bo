@@ -20,6 +20,14 @@ export interface AdminRolesTable {
   name: string;
 }
 
+export interface AdminSessionsTable {
+  id: string;
+  admin_user_id: string;
+  created_at: CreatedAtColumn;
+  expires_at: TimestampColumn;
+  revoked_at: NullableTimestampColumn;
+}
+
 export interface RoleAssignmentsTable {
   admin_user_id: string;
   role_id: string;
@@ -83,6 +91,7 @@ export interface AuditIndexWatermarksTable {
 export interface Database {
   admin_users: AdminUsersTable;
   admin_roles: AdminRolesTable;
+  admin_sessions: AdminSessionsTable;
   role_assignments: RoleAssignmentsTable;
   maker_checker_requests: MakerCheckerRequestsTable;
   case_queue_items: CaseQueueItemsTable;

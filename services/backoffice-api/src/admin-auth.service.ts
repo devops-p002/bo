@@ -10,6 +10,7 @@ import type { Role } from './roles.js';
 import { ROLES } from './roles.js';
 
 const AdminUserId = defineId('AdminUserId');
+const AdminSessionId = defineId('AdminSessionId');
 const AUDIT_STREAM_ID = 'backoffice-api-main';
 
 // Same "verify against a fixed dummy hash when the account doesn't
@@ -89,7 +90,16 @@ export class AdminAuthService {
       .execute();
     const roles = roleRows.map((r) => r.name);
 
-    const accessToken = await signAdminAccessToken({ adminUserId: user.id, roles }, this.config.jwtSecret, this.config.accessTokenTtlSeconds);
+    // A real, revocable server-side session row - not just a stateless
+    // JWT nobody can invalidate before it naturally expires. expires_at
+    // mirrors the JWT's own TTL so the two agree on when the session
+    // stops being usable; JwtAuthGuard checks this row on every request,
+    // which is what makes logout() below an actual revocation.
+    const sessionId = AdminSessionId.generate();
+    const expiresAt = new Date(Date.now() + this.config.accessTokenTtlSeconds * 1000);
+    await this.db.insertInto('admin_sessions').values({ id: sessionId, admin_user_id: user.id, expires_at: expiresAt }).execute();
+
+    const accessToken = await signAdminAccessToken({ adminUserId: user.id, roles, sessionId }, this.config.jwtSecret, this.config.accessTokenTtlSeconds);
 
     await appendEvent(this.auditStore, AUDIT_STREAM_ID, {
       eventType: 'admin.login_succeeded',
@@ -101,7 +111,22 @@ export class AdminAuthService {
     return { accessToken, adminUserId: user.id, roles };
   }
 
+  async logout(sessionId: string): Promise<void> {
+    await this.db.updateTable('admin_sessions').set({ revoked_at: new Date() }).where('id', '=', sessionId).where('revoked_at', 'is', null).execute();
+  }
+
   async verifyToken(token: string) {
-    return verifyAdminAccessToken(token, this.config.jwtSecret);
+    const claims = await verifyAdminAccessToken(token, this.config.jwtSecret);
+    const session = await this.db
+      .selectFrom('admin_sessions')
+      .select(['expires_at', 'revoked_at'])
+      .where('id', '=', claims.sessionId)
+      .executeTakeFirst();
+
+    if (!session || session.revoked_at !== null || session.expires_at.getTime() < Date.now()) {
+      throw new UnauthenticatedError('Session is no longer valid');
+    }
+
+    return claims;
   }
 }

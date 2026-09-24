@@ -12,11 +12,12 @@ const AUDIENCE = 'backoffice-api';
 export interface AdminAccessTokenClaims {
   adminUserId: string;
   roles: string[];
+  sessionId: string;
 }
 
 export async function signAdminAccessToken(claims: AdminAccessTokenClaims, secret: string, ttlSeconds: number): Promise<string> {
   const key = new TextEncoder().encode(secret);
-  return new SignJWT({ roles: claims.roles })
+  return new SignJWT({ roles: claims.roles, sid: claims.sessionId })
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(claims.adminUserId)
     .setIssuer(ISSUER)
@@ -30,10 +31,10 @@ export async function verifyAdminAccessToken(token: string, secret: string): Pro
   const key = new TextEncoder().encode(secret);
   try {
     const { payload } = await jwtVerify(token, key, { issuer: ISSUER, audience: AUDIENCE });
-    if (typeof payload.sub !== 'string' || !Array.isArray(payload.roles)) {
+    if (typeof payload.sub !== 'string' || !Array.isArray(payload.roles) || typeof payload.sid !== 'string') {
       throw new UnauthenticatedError('Invalid access token');
     }
-    return { adminUserId: payload.sub, roles: payload.roles as string[] };
+    return { adminUserId: payload.sub, roles: payload.roles as string[], sessionId: payload.sid };
   } catch (err) {
     if (err instanceof UnauthenticatedError) throw err;
     if (err instanceof joseErrors.JOSEError) {
