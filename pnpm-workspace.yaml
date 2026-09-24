@@ -1,0 +1,9 @@
+packages:
+  - "apps/*"
+  - "services/*"
+  - "packages/*"
+
+# pnpm withholds install (postinstall/etc.) scripts from every dependency
+# by default - argon2 needs its own build step (native binding).
+onlyBuiltDependencies:
+  - argon2

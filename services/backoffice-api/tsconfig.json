@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../../packages/audit-chain" },
+    { "path": "../../packages/config" },
+    { "path": "../../packages/errors" },
+    { "path": "../../packages/ids" },
+    { "path": "../../packages/logging" }
+  ]
+}

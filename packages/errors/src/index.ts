@@ -1,0 +1,18 @@
+export {
+  type ProblemDetails,
+  type AppErrorOptions,
+  AppError,
+  ValidationError,
+  UnauthenticatedError,
+  PermissionDeniedError,
+  NotFoundError,
+  ConflictError,
+  IdempotencyKeyReuseError,
+  RateLimitedError,
+  AccountLockedError,
+  RefreshTokenReuseError,
+  StepUpRequiredError,
+  InternalError,
+  isAppError,
+  toProblemDetails,
+} from './app-error.js';
