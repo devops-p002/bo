@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ComponentTemplate from '../ComponentTemplate';
+import { Breadcrumb } from '../../common/UI';
 import { listPlayers } from '../../../services/api/players';
 
 // Real backend field: Player.vipLevel (BRONZE/SILVER/GOLD/PLATINUM/DIAMOND).
@@ -51,17 +52,22 @@ const MemberVIP = () => {
   const columns = ['Username', 'VIP Level', 'Balance'];
 
   return (
-    <ComponentTemplate
-      title="VIP Management"
-      description="Real members grouped by VIP level. Points, benefits and next-level thresholds aren't tracked on the backend (only vipLevel itself is a real field) and have been dropped rather than fabricated."
-      data={vipData}
-      columns={columns}
-      rowKeys={['username', 'level', 'balance']}
-      stats={stats}
-      loading={loading}
-      error={error ? `Failed to load members: ${error}` : null}
-      hasAddButton={false}
-    />
+    <>
+      <div className="mb-3">
+        <Breadcrumb />
+      </div>
+      <ComponentTemplate
+        title="VIP Management"
+        description="Real members grouped by VIP level. Points, benefits and next-level thresholds aren't tracked on the backend (only vipLevel itself is a real field) and have been dropped rather than fabricated."
+        data={vipData}
+        columns={columns}
+        rowKeys={['username', 'level', 'balance']}
+        stats={stats}
+        loading={loading}
+        error={error ? `Failed to load members: ${error}` : null}
+        hasAddButton={false}
+      />
+    </>
   );
 };
 

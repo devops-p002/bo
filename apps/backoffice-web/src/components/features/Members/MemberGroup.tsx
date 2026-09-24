@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import ComponentTemplate from '../ComponentTemplate';
-import { Modal, Button } from '../../common/UI';
+import { Modal, Button, Breadcrumb } from '../../common/UI';
 import { Input, Select } from '../../common/Forms';
 import { useNotification } from '../../../context/NotificationContext';
 import {
@@ -195,6 +195,9 @@ const MemberGroup = () => {
 
   return (
     <>
+      <div className="mb-3">
+        <Breadcrumb />
+      </div>
       <ComponentTemplate
         title="Member Groups"
         description="Organize members into groups for targeted management"

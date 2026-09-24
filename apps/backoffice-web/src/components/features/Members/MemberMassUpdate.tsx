@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import ComponentTemplate from '../ComponentTemplate';
-import { Modal, Button } from '../../common/UI';
+import { Modal, Button, Breadcrumb } from '../../common/UI';
 import { Input, Select } from '../../common/Forms';
 import { useNotification } from '../../../context/NotificationContext';
 import { createBulkOperation, listBulkOperations, type BulkOperation } from '../../../services/api/bulk-operations';
@@ -206,6 +206,9 @@ const MemberMassUpdate = () => {
 
   return (
     <>
+      <div className="mb-3">
+        <Breadcrumb />
+      </div>
       <ComponentTemplate
         title="Mass Update Operations"
         description="Perform bulk operations on multiple member accounts simultaneously"
