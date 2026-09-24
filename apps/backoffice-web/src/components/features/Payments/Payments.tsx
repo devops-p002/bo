@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import React, { useEffect, useState } from 'react';
 import { Card, Breadcrumb } from '../../common/UI';
 import { useTheme } from '../../../context/ThemeContext';
 import DepositList from './components/DepositList';
@@ -7,23 +6,37 @@ import WithdrawalList from './components/WithdrawalList';
 import PaymentMethods from './components/PaymentMethods';
 import TransactionHistory from './components/TransactionHistory';
 import PaymentFilters from './components/PaymentFilters';
-
-const GET_PAYMENT_STATS = gql`
-  query PaymentsQuickStats {
-    dashboardStats {
-      totalDeposits
-      totalWithdrawals
-      pendingTransactions
-      revenue
-    }
-  }
-`;
+import { listTransactions } from '../../../services/api/transactions';
 
 const Payments = () => {
   const { isDarkTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('deposits');
-  const { data: statsData, loading: statsLoading } = useQuery(GET_PAYMENT_STATS, { fetchPolicy: 'cache-and-network' });
-  const stats = statsData?.dashboardStats;
+  // Summed over the most recent 200 transactions (same page-bounded
+  // convention DepositList/WithdrawalList already use for their own Quick
+  // Stats) - there's no dedicated aggregate endpoint yet (CLAUDE.md's
+  // Dashboard phase, still pending), so this is real data, just not a
+  // full-table aggregate.
+  const [stats, setStats] = useState<{ totalDeposits: number; totalWithdrawals: number; pendingTransactions: number; revenue: number } | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setStatsLoading(true);
+    listTransactions({}, { page: 1, limit: 200 })
+      .then((data) => {
+        if (cancelled) return;
+        const totalDeposits = data.nodes.filter((t) => t.type === 'DEPOSIT' && t.status === 'COMPLETED').reduce((sum, t) => sum + t.amount, 0);
+        const totalWithdrawals = data.nodes.filter((t) => t.type === 'WITHDRAWAL' && t.status === 'COMPLETED').reduce((sum, t) => sum + t.amount, 0);
+        const pendingTransactions = data.nodes.filter((t) => t.status === 'PENDING' || t.status === 'APPROVED' || t.status === 'PROCESSING').length;
+        setStats({ totalDeposits, totalWithdrawals, pendingTransactions, revenue: totalDeposits - totalWithdrawals });
+      })
+      .finally(() => {
+        if (!cancelled) setStatsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [filters, setFilters] = useState({
     type: 'all',
     status: 'all',

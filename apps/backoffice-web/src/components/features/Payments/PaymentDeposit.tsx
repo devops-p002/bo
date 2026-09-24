@@ -1,36 +1,7 @@
-import React, { useMemo } from 'react';
-import { gql, useQuery, useMutation } from '@apollo/client';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Card, Breadcrumb } from '../../common/UI';
 import { useTheme } from '../../../context/ThemeContext';
-
-const GET_DEPOSITS = gql`
-  query PaymentDepositList {
-    transactions(filter: { type: DEPOSIT }, pagination: { limit: 50 }) {
-      totalCount
-      nodes {
-        id
-        amount
-        currency
-        status
-        paymentMethod
-        createdAt
-        user { username }
-      }
-    }
-  }
-`;
-
-const APPROVE_TRANSACTION = gql`
-  mutation ApproveDepositRow($id: ID!) {
-    approveTransaction(id: $id) { id status }
-  }
-`;
-
-const REJECT_TRANSACTION = gql`
-  mutation RejectDepositRow($id: ID!) {
-    rejectTransaction(id: $id, reason: "Rejected by admin") { id status }
-  }
-`;
+import { listTransactions, updateTransactionStatus } from '../../../services/api/transactions';
 
 const STATUS_LABELS = {
   PENDING: 'Pending',
@@ -43,11 +14,26 @@ const STATUS_LABELS = {
 
 const PaymentDeposit = () => {
   const { isDarkTheme } = useTheme();
-  const { data, loading, error, refetch } = useQuery(GET_DEPOSITS, { fetchPolicy: 'cache-and-network' });
-  const [approveTransaction] = useMutation(APPROVE_TRANSACTION);
-  const [rejectTransaction] = useMutation(REJECT_TRANSACTION);
+  const [deposits, setDeposits] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const deposits = data?.transactions?.nodes ?? [];
+  const refetch = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await listTransactions({ type: 'DEPOSIT' }, { page: 1, limit: 50 });
+      setDeposits(data.nodes);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   const stats = useMemo(() => {
     const completed = deposits.filter((d) => d.status === 'COMPLETED');
@@ -69,13 +55,15 @@ const PaymentDeposit = () => {
     }
   };
 
+  // Deposits settle in one step (no intermediate APPROVED state here) -
+  // see usePayments.ts's DEPOSIT_ACTION_STATUS_MAP comment for why.
   const handleApprove = async (id) => {
-    await approveTransaction({ variables: { id } });
+    await updateTransactionStatus(id, { status: 'COMPLETED' });
     refetch();
   };
 
   const handleReject = async (id) => {
-    await rejectTransaction({ variables: { id } });
+    await updateTransactionStatus(id, { status: 'FAILED', reason: 'Rejected by admin' });
     refetch();
   };
 
@@ -158,7 +146,7 @@ const PaymentDeposit = () => {
                 {loading ? (
                   <tr><td colSpan={7} className="text-center text-sm p-4 text-gray-500">Loading…</td></tr>
                 ) : error ? (
-                  <tr><td colSpan={7} className="text-center text-sm p-4 text-red-600">Failed to load: {error.message}</td></tr>
+                  <tr><td colSpan={7} className="text-center text-sm p-4 text-red-600">Failed to load: {error}</td></tr>
                 ) : deposits.length === 0 ? (
                   <tr><td colSpan={7} className="text-center text-sm p-4 text-gray-500">No deposits found.</td></tr>
                 ) : deposits.map((deposit) => (
@@ -167,7 +155,7 @@ const PaymentDeposit = () => {
                       {deposit.id.slice(0, 8)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {deposit.user?.username}
+                      {deposit.username}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {deposit.currency} {deposit.amount.toLocaleString()}

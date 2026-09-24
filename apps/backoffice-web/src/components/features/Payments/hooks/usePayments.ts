@@ -1,55 +1,42 @@
 import { useState, useCallback } from 'react';
-import { gql, useApolloClient } from '@apollo/client';
+import { listTransactions, updateTransactionStatus } from '../../../../services/api/transactions';
 
-const TRANSACTION_FIELDS = `
-  id
-  amount
-  currency
-  status
-  paymentMethod
-  externalReference
-  createdAt
-  user { username }
-`;
+// UI filter status vocabulary -> backend TransactionStatus enum (PENDING/
+// APPROVED/PROCESSING/COMPLETED/FAILED/CANCELLED/EXPIRED). 'rejected' has
+// no dedicated backend status - rejected rows are stored as FAILED.
+const FILTER_STATUS_MAP: Record<string, string> = {
+  pending: 'PENDING',
+  approved: 'APPROVED',
+  rejected: 'FAILED',
+  failed: 'FAILED',
+  processing: 'PROCESSING',
+  completed: 'COMPLETED',
+  cancelled: 'CANCELLED',
+  expired: 'EXPIRED',
+};
 
-const GET_TRANSACTIONS = gql`
-  query PaymentTransactions($filter: TransactionFilterInput, $pagination: PaginationInput) {
-    transactions(filter: $filter, pagination: $pagination) {
-      totalCount
-      nodes {
-        ${TRANSACTION_FIELDS}
-      }
-    }
-  }
-`;
+// Status-update action targets differ by transaction type (see
+// 20260406000014_create-transactions.cjs's comment): DepositList's UI only
+// offers Approve/Reject with no further step, so "approved" there means
+// settling straight to COMPLETED (which is what actually credits balance -
+// see TransactionsService.updateStatus). WithdrawalList's UI instead walks
+// a real multi-step pipeline (Approve -> Process -> Complete) button by
+// button, so "approved" there means the intermediate APPROVED state.
+const DEPOSIT_ACTION_STATUS_MAP: Record<string, string> = { approved: 'COMPLETED', rejected: 'FAILED' };
+const WITHDRAWAL_ACTION_STATUS_MAP: Record<string, string> = {
+  approved: 'APPROVED',
+  rejected: 'FAILED',
+  processing: 'PROCESSING',
+  completed: 'COMPLETED',
+};
 
-const APPROVE_TRANSACTION = gql`
-  mutation ApproveDeposit($id: ID!) {
-    approveTransaction(id: $id) { ${TRANSACTION_FIELDS} }
-  }
-`;
+const reasonFor = (newStatus: string) =>
+  newStatus === 'rejected' ? 'Rejected by admin' : newStatus === 'cancelled' ? 'Cancelled by admin' : undefined;
 
-const REJECT_TRANSACTION = gql`
-  mutation RejectDeposit($id: ID!, $reason: String!) {
-    rejectTransaction(id: $id, reason: $reason) { ${TRANSACTION_FIELDS} }
-  }
-`;
-
-const CANCEL_TRANSACTION = gql`
-  mutation CancelDeposit($id: ID!, $reason: String) {
-    cancelTransaction(id: $id, reason: $reason) { ${TRANSACTION_FIELDS} }
-  }
-`;
-
-// Backend TransactionStatus enum is PENDING/PROCESSING/COMPLETED/FAILED/
-// CANCELLED/EXPIRED (SCREAMING_CASE, from GraphQL). The existing UI
-// (DepositList/WithdrawalList) was built around lowercase status strings
-// like 'approved'/'rejected' - normalize at this boundary so those
-// components don't need to change.
-const normalizeTransaction = (tx) => ({
+const normalizeTransaction = (tx: any) => ({
   id: tx.id,
   transactionId: tx.id,
-  memberUsername: tx.user?.username || 'unknown',
+  memberUsername: tx.username || 'unknown',
   amount: tx.amount,
   paymentMethod: tx.paymentMethod || 'unspecified',
   status: tx.status.toLowerCase(),
@@ -57,30 +44,21 @@ const normalizeTransaction = (tx) => ({
   reference: tx.externalReference || '',
 });
 
-const buildTransactionFilter = (type: any, filters: any) => {
+const buildTransactionFilter = (type: string, filters: any) => {
   const filter: any = { type };
   if (filters.status && filters.status !== 'all') {
-    // UI status vocabulary -> backend TransactionStatus enum
-    const statusMap = {
-      approved: 'COMPLETED',
-      completed: 'COMPLETED',
-      rejected: 'FAILED',
-      failed: 'FAILED',
-      pending: 'PENDING',
-      processing: 'PROCESSING',
-      cancelled: 'CANCELLED',
-      expired: 'EXPIRED',
-    };
-    filter.status = statusMap[filters.status] || filters.status.toUpperCase();
+    filter.status = FILTER_STATUS_MAP[filters.status] || filters.status.toUpperCase();
   }
+  if (filters.method && filters.method !== 'all') filter.paymentMethod = filters.method;
+  if (filters.searchTerm) filter.search = filters.searchTerm;
   if (filters.dateFrom && filters.dateTo) {
-    filter.dateRange = { start: filters.dateFrom, end: filters.dateTo };
+    filter.dateRangeStart = new Date(filters.dateFrom).toISOString();
+    filter.dateRangeEnd = new Date(filters.dateTo).toISOString();
   }
   return filter;
 };
 
 const usePayments = () => {
-  const apolloClient = useApolloClient();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [deposits, setDeposits] = useState([]);
@@ -112,31 +90,20 @@ const usePayments = () => {
     },
   ]);
 
-  const fetchTransactions = useCallback(async (type, filters, setter) => {
+  const fetchTransactions = useCallback(async (type: string, filters: any, setter: (rows: any[]) => void) => {
     setLoading(true);
     setError(null);
     try {
-      const searchFilters = { ...filters };
-      const filter = buildTransactionFilter(type, searchFilters);
-      const { data } = await apolloClient.query({
-        query: GET_TRANSACTIONS,
-        variables: { filter, pagination: { page: 1, limit: 50 } },
-        fetchPolicy: 'network-only',
-      });
-      let nodes = data.transactions.nodes.map(normalizeTransaction);
-      if (searchFilters.searchTerm) {
-        const term = searchFilters.searchTerm.toLowerCase();
-        nodes = nodes.filter((t) => t.memberUsername.toLowerCase().includes(term)
-          || t.transactionId.toLowerCase().includes(term));
-      }
-      setter(nodes);
-    } catch (err) {
-      setError(err.graphQLErrors?.[0]?.message || err.message);
+      const filter = buildTransactionFilter(type, filters);
+      const data = await listTransactions(filter, { page: 1, limit: 50 });
+      setter(data.nodes.map(normalizeTransaction));
+    } catch (err: any) {
+      setError(err.message);
       console.error(`Error fetching ${type} transactions:`, err);
     } finally {
       setLoading(false);
     }
-  }, [apolloClient]);
+  }, []);
 
   const fetchDeposits = useCallback((filters = {}) => fetchTransactions('DEPOSIT', filters, setDeposits), [fetchTransactions]);
   const fetchWithdrawals = useCallback((filters = {}) => fetchTransactions('WITHDRAWAL', filters, setWithdrawals), [fetchTransactions]);
@@ -146,30 +113,28 @@ const usePayments = () => {
     // compatibility with callers expecting a fetch function.
   }, []);
 
-  const applyStatusUpdate = useCallback(async (id, newStatus) => {
+  const applyStatusUpdate = useCallback(async (id: string, status: string, reason?: string) => {
     setLoading(true);
     setError(null);
     try {
-      if (newStatus === 'approved' || newStatus === 'completed') {
-        await apolloClient.mutate({ mutation: APPROVE_TRANSACTION, variables: { id } });
-      } else if (newStatus === 'rejected' || newStatus === 'failed') {
-        await apolloClient.mutate({ mutation: REJECT_TRANSACTION, variables: { id, reason: 'Rejected by admin' } });
-      } else if (newStatus === 'cancelled') {
-        await apolloClient.mutate({ mutation: CANCEL_TRANSACTION, variables: { id, reason: 'Cancelled by admin' } });
-      } else {
-        throw new Error(`Unsupported status transition: ${newStatus}`);
-      }
-    } catch (err) {
-      setError(err.graphQLErrors?.[0]?.message || err.message);
+      await updateTransactionStatus(id, { status, reason });
+    } catch (err: any) {
+      setError(err.message);
       console.error('Error updating transaction status:', err);
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [apolloClient]);
+  }, []);
 
-  const updateDepositStatus = useCallback((id, newStatus) => applyStatusUpdate(id, newStatus), [applyStatusUpdate]);
-  const updateWithdrawalStatus = useCallback((id, newStatus) => applyStatusUpdate(id, newStatus), [applyStatusUpdate]);
+  const updateDepositStatus = useCallback(
+    (id: string, newStatus: string) => applyStatusUpdate(id, DEPOSIT_ACTION_STATUS_MAP[newStatus] || newStatus.toUpperCase(), reasonFor(newStatus)),
+    [applyStatusUpdate],
+  );
+  const updateWithdrawalStatus = useCallback(
+    (id: string, newStatus: string) => applyStatusUpdate(id, WITHDRAWAL_ACTION_STATUS_MAP[newStatus] || newStatus.toUpperCase(), reasonFor(newStatus)),
+    [applyStatusUpdate],
+  );
 
   const createPaymentMethod = useCallback(async (methodData) => {
     setPaymentMethods((prev) => [...prev, { id: Date.now().toString(), ...methodData }]);
