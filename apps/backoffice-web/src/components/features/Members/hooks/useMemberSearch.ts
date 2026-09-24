@@ -11,6 +11,83 @@ const EMPTY_ADD_FORM = {
   vipLevel: 'BRONZE',
 };
 
+const DEFAULT_ACCOUNT_COLUMNS = {
+  registrationTime: true,
+  username: true,
+  name: true,
+  email: true,
+  phone: true,
+  dateOfBirth: true,
+  vip: true,
+  status: true,
+  totalBalance: true,
+  lastLoginIp: true,
+  lastLoginTime: true,
+  currencyType: true,
+};
+
+const DEFAULT_PROVIDER_COLUMNS = {
+  createTime: true,
+  provider: true,
+  providerAccount: true,
+  username: true,
+  name: true,
+  email: true,
+  phone: true,
+  dateOfBirth: true,
+  vip: true,
+  vipExperience: true,
+  affiliateUrl: true,
+  status: true,
+  totalBalance: true,
+  signUp: true,
+  lastLoginIp: true,
+};
+
+// Column checkbox preference persists for this browser session only (not
+// permanently) - sessionStorage, not localStorage, per the requested
+// behavior.
+const COLUMNS_STORAGE_KEY = 'bo_member_search_columns';
+
+function readStoredColumns(): { account?: Record<string, boolean>; provider?: Record<string, boolean> } {
+  try {
+    const raw = sessionStorage.getItem(COLUMNS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+const ACCOUNT_COLUMN_LABELS: Record<string, string> = {
+  registrationTime: 'Registration Time',
+  username: 'Username',
+  name: 'Name',
+  email: 'Email',
+  phone: 'Phone',
+  dateOfBirth: 'Date of Birth',
+  vip: 'VIP',
+  status: 'Status',
+  totalBalance: 'Total Balance',
+  lastLoginIp: 'Last Login IP',
+  lastLoginTime: 'Last Login Time',
+  currencyType: 'Currency Type',
+};
+
+const ACCOUNT_COLUMN_VALUE: Record<string, (row: any) => string> = {
+  registrationTime: (row) => (row.createdAt ? new Date(row.createdAt).toLocaleString() : ''),
+  username: (row) => row.username || row.email || '',
+  name: (row) => row.fullName || '',
+  email: (row) => row.email || '',
+  phone: (row) => row.phone || '',
+  dateOfBirth: (row) => (row.dateOfBirth ? new Date(row.dateOfBirth).toLocaleDateString() : ''),
+  vip: (row) => row.vipLevel || '',
+  status: (row) => row.status || '',
+  totalBalance: (row) => String(row.balance ?? 0),
+  lastLoginIp: (row) => row.lastLoginIP || '',
+  lastLoginTime: (row) => (row.lastLoginAt ? new Date(row.lastLoginAt).toLocaleString() : ''),
+  currencyType: (row) => row.currency || '',
+};
+
 export const useMemberSearch = () => {
   const notification = useNotification();
   const [activeTab, setActiveTab] = useState('Account');
@@ -60,40 +137,17 @@ export const useMemberSearch = () => {
   // Column visibility state for Account tab. Columns with no backend
   // equivalent (vipExperience, vipPoint, affiliateUrl, signUp, lastDeposit,
   // lastBetTime, channelType, channelName) were dropped - see report.
-  const [visibleAccountColumns, setVisibleAccountColumns] = useState({
-    registrationTime: true,
-    username: true,
-    name: true,
-    email: true,
-    phone: true,
-    dateOfBirth: true,
-    vip: true,
-    status: true,
-    totalBalance: true,
-    lastLoginIp: true,
-    lastLoginTime: true,
-    currencyType: true
-  });
+  // Seeded from sessionStorage so a saved preference survives navigating
+  // away and back within the same browser session.
+  const [visibleAccountColumns, setVisibleAccountColumns] = useState(
+    () => readStoredColumns().account ?? DEFAULT_ACCOUNT_COLUMNS,
+  );
 
   // Column visibility state for Provider Account tab (mock data only - see
   // ProviderAccountSearchForm/SearchResultsTable notes; kept as-is).
-  const [visibleProviderColumns, setVisibleProviderColumns] = useState({
-    createTime: true,
-    provider: true,
-    providerAccount: true,
-    username: true,
-    name: true,
-    email: true,
-    phone: true,
-    dateOfBirth: true,
-    vip: true,
-    vipExperience: true,
-    affiliateUrl: true,
-    status: true,
-    totalBalance: true,
-    signUp: true,
-    lastLoginIp: true
-  });
+  const [visibleProviderColumns, setVisibleProviderColumns] = useState(
+    () => readStoredColumns().provider ?? DEFAULT_PROVIDER_COLUMNS,
+  );
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -221,9 +275,35 @@ export const useMemberSearch = () => {
     setCurrentPage(1);
   };
 
+  // Exports exactly what's on screen: the currently-loaded results page,
+  // limited to whichever columns are currently checked visible. Provider
+  // Account has no real data to export (mock only - see
+  // SearchResultsTable's own notice for that tab).
   const handleExport = useCallback(() => {
-    notification.info(`Exporting ${activeTab} data (${recordsPerPage} records per page)`);
-  }, [notification, activeTab, recordsPerPage]);
+    if (activeTab !== 'Account') {
+      notification.info('Export is not available for Provider Account - it has no real backend data.');
+      return;
+    }
+    if (results.length === 0) {
+      notification.info('No results to export.');
+      return;
+    }
+    const columns = Object.keys(ACCOUNT_COLUMN_LABELS).filter((key) => visibleAccountColumns[key]);
+    const escape = (value: string) => `"${value.replace(/"/g, '""')}"`;
+    const headerRow = columns.map((key) => escape(ACCOUNT_COLUMN_LABELS[key])).join(',');
+    const dataRows = results.map((row) => columns.map((key) => escape(ACCOUNT_COLUMN_VALUE[key](row))).join(','));
+    const csvContent = [headerRow, ...dataRows].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `member-search_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, [activeTab, results, visibleAccountColumns, notification]);
 
   const handleColumnToggle = (column) => {
     if (activeTab === 'Account') {
@@ -240,8 +320,16 @@ export const useMemberSearch = () => {
   };
 
   const handleSave = useCallback(() => {
-    notification.success('View settings saved successfully!');
-  }, [notification]);
+    try {
+      sessionStorage.setItem(
+        COLUMNS_STORAGE_KEY,
+        JSON.stringify({ account: visibleAccountColumns, provider: visibleProviderColumns }),
+      );
+      notification.success('Column preferences saved for this session.');
+    } catch {
+      notification.error('Could not save column preferences.');
+    }
+  }, [notification, visibleAccountColumns, visibleProviderColumns]);
 
   // Builds the real filter this app's REST API accepts (services/backoffice-api's
   // GET /players). Fields with no backend equivalent (lastDepositSince,
