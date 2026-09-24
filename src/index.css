@@ -1,0 +1,246 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+  
+  h1 {
+    @apply text-3xl;
+  }
+  
+  h2 {
+    @apply text-2xl;
+  }
+  
+  h3 {
+    @apply text-xl;
+  }
+  
+  h4 {
+    @apply text-lg;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-lg shadow-sm p-6;
+  }
+  
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  
+  .btn-primary {
+    @apply btn bg-primary-500 text-white hover:bg-primary-600 focus:ring-primary-500;
+  }
+  
+  .btn-secondary {
+    @apply btn bg-gray-200 text-gray-800 hover:bg-gray-300 focus:ring-gray-500;
+  }
+  
+  .btn-danger {
+    @apply btn bg-error text-white hover:bg-red-600 focus:ring-red-500;
+  }
+  
+  .form-input {
+    @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500;
+  }
+  
+  .form-label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+  
+  .form-error {
+    @apply mt-1 text-sm text-error;
+  }
+}
+
+/* Dark Theme Implementation for Gaming Platform 24/7 Operations */
+.dark-theme {
+  @apply bg-gray-900 text-gray-100;
+}
+
+.dark-theme .card {
+  @apply bg-gray-800 border-gray-700;
+}
+
+/* Header - Always Dark Theme to Match Sidebar */
+header {
+  @apply bg-gray-800 border-gray-700;
+}
+
+header button {
+  @apply text-gray-300 hover:text-white;
+}
+
+header button:focus {
+  @apply text-white;
+}
+
+/* Header Dark Theme (redundant but kept for consistency) */
+.dark-theme header {
+  @apply bg-gray-800 border-gray-700;
+}
+
+.dark-theme header button {
+  @apply text-gray-300 hover:text-white;
+}
+
+.dark-theme header button:focus {
+  @apply text-white;
+}
+
+/* Main content area dark theme */
+.dark-theme main {
+  @apply bg-gray-900;
+}
+
+/* Form elements dark theme */
+.dark-theme .form-input {
+  @apply bg-gray-800 border-gray-600 text-gray-100;
+}
+
+.dark-theme .form-input:focus {
+  @apply border-primary-400 ring-primary-400 bg-gray-700;
+}
+
+.dark-theme .form-label {
+  @apply text-gray-300;
+}
+
+/* Button variations for dark theme */
+.dark-theme .btn-secondary {
+  @apply bg-gray-700 text-gray-200 hover:bg-gray-600;
+}
+
+/* Modal dark theme */
+.dark-theme .modal-content {
+  @apply bg-gray-800 border-gray-700;
+}
+
+.dark-theme .modal-header {
+  @apply border-gray-700;
+}
+
+.dark-theme .modal-footer {
+  @apply border-gray-700;
+}
+
+/* Dropdown/Select dark theme */
+.dark-theme select {
+  @apply bg-gray-800 border-gray-600 text-gray-100;
+}
+
+.dark-theme select:focus {
+  @apply border-primary-400 ring-primary-400;
+}
+
+/* Table dark theme */
+.dark-theme table {
+  @apply bg-gray-800;
+}
+
+.dark-theme th {
+  @apply bg-gray-700 text-gray-200;
+}
+
+.dark-theme td {
+  @apply border-gray-700 text-gray-300;
+}
+
+.dark-theme tr:hover {
+  @apply bg-gray-700;
+}
+
+/* Notification/Alert dark theme */
+.dark-theme .bg-yellow-50 {
+  @apply bg-yellow-900 bg-opacity-20;
+}
+
+.dark-theme .bg-green-50 {
+  @apply bg-green-900 bg-opacity-20;
+}
+
+.dark-theme .bg-red-50 {
+  @apply bg-red-900 bg-opacity-20;
+}
+
+.dark-theme .bg-blue-50 {
+  @apply bg-blue-900 bg-opacity-20;
+}
+
+/* Border and divider dark theme */
+.dark-theme .border-gray-200 {
+  @apply border-gray-700;
+}
+
+.dark-theme .border-gray-300 {
+  @apply border-gray-600;
+}
+
+/* Gaming Platform specific dark theme enhancements */
+.dark-theme .gaming-card {
+  @apply bg-gray-800 border-gray-600 shadow-xl;
+}
+
+.dark-theme .gaming-stat {
+  @apply bg-gray-700 border-gray-600;
+}
+
+/* Scrollbar dark theme */
+.dark-theme .scrollbar-thin::-webkit-scrollbar-track {
+  background: #1f2937; /* gray-800 */
+}
+
+.dark-theme .scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #4b5563; /* gray-600 */
+}
+
+.dark-theme .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #6b7280; /* gray-500 */
+}
+
+.dark-theme .scrollbar-thin {
+  scrollbar-color: #4b5563 #1f2937;
+}
+
+/* Custom scrollbar styles for sidebar */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #374151; /* gray-700 */
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #6B7280; /* gray-500 */
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF; /* gray-400 */
+}
+
+/* Hide scrollbar for Firefox */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #6B7280 #374151;
+}
+
+/* Smooth scrolling */
+.scrollbar-thin {
+  scroll-behavior: smooth;
+} 

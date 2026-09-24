@@ -1,0 +1,78 @@
+{
+  "short_name": "Aura Gaming",
+  "name": "Aura Gaming Platform Admin",
+  "description": "Comprehensive gaming platform administration dashboard",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#1f2937",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "categories": ["business", "productivity", "finance"],
+  "lang": "en-US",
+  "dir": "ltr",
+  "scope": "/",
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "View main dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "favicon.ico", "sizes": "192x192" }]
+    },
+    {
+      "name": "Members",
+      "short_name": "Members",
+      "description": "Manage members",
+      "url": "/members",
+      "icons": [{ "src": "favicon.ico", "sizes": "192x192" }]
+    },
+    {
+      "name": "Payments",
+      "short_name": "Payments",
+      "description": "Process payments",
+      "url": "/payments",
+      "icons": [{ "src": "favicon.ico", "sizes": "192x192" }]
+    },
+    {
+      "name": "Reports",
+      "short_name": "Reports",
+      "description": "View reports",
+      "url": "/reports",
+      "icons": [{ "src": "favicon.ico", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Aura Gaming Dashboard"
+    },
+    {
+      "src": "screenshot-narrow.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Aura Gaming Mobile View"
+    }
+  ]
+} 

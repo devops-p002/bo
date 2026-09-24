@@ -1,0 +1,54 @@
+# Aura Gaming Platform - Robots.txt
+# This is an admin dashboard, so we disallow all crawlers
+
+User-agent: *
+Disallow: /
+
+# Sitemap (if needed for internal documentation)
+# Sitemap: https://admin.auragaming.com/sitemap.xml
+
+# Specific bot instructions
+User-agent: Googlebot
+Disallow: /
+
+User-agent: Bingbot
+Disallow: /
+
+User-agent: Slurp
+Disallow: /
+
+User-agent: DuckDuckBot
+Disallow: /
+
+User-agent: Baiduspider
+Disallow: /
+
+User-agent: YandexBot
+Disallow: /
+
+# Security crawlers (allow for security auditing)
+User-agent: SecurityBot
+Allow: /security-check
+
+# Block common paths that shouldn't be indexed
+User-agent: *
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /members/
+Disallow: /payments/
+Disallow: /reports/
+Disallow: /settings/
+Disallow: /login
+Disallow: /auth/
+Disallow: /graphql
+Disallow: /uploads/
+Disallow: /logs/
+Disallow: /config/
+Disallow: /src/
+Disallow: /node_modules/
+Disallow: /.env
+Disallow: /.git/
+
+# Crawl delay (in seconds) - not needed for admin dashboard
+Crawl-delay: 86400 

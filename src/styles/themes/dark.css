@@ -1,0 +1,295 @@
+/* Dark Theme for Aura Gaming Platform */
+[data-theme="dark"] {
+  /* Background Colors */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-card: #1e293b;
+  --bg-overlay: rgba(0, 0, 0, 0.7);
+  --bg-hover: #334155;
+  --bg-active: #475569;
+  --bg-disabled: #1e293b;
+
+  /* Text Colors */
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --text-inverse: #0f172a;
+  --text-muted: #64748b;
+  --text-disabled: #475569;
+  --text-link: #60a5fa;
+  --text-link-hover: #93c5fd;
+
+  /* Border Colors */
+  --border-primary: #334155;
+  --border-secondary: #475569;
+  --border-tertiary: #64748b;
+  --border-focus: #60a5fa;
+  --border-error: #f87171;
+  --border-success: #34d399;
+  --border-warning: #fbbf24;
+
+  /* Shadow Colors */
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 2px 0 var(--shadow-color);
+  --shadow-md: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -2px var(--shadow-color);
+  --shadow-lg: 0 10px 15px -3px var(--shadow-color), 0 4px 6px -4px var(--shadow-color);
+  --shadow-xl: 0 20px 25px -5px var(--shadow-color), 0 8px 10px -6px var(--shadow-color);
+
+  /* Button Colors */
+  --btn-primary-bg: #3b82f6;
+  --btn-primary-hover: #60a5fa;
+  --btn-primary-active: #93c5fd;
+  --btn-primary-text: #ffffff;
+  --btn-primary-border: #3b82f6;
+
+  --btn-secondary-bg: #374151;
+  --btn-secondary-hover: #4b5563;
+  --btn-secondary-active: #6b7280;
+  --btn-secondary-text: #f9fafb;
+  --btn-secondary-border: #4b5563;
+
+  --btn-success-bg: #10b981;
+  --btn-success-hover: #34d399;
+  --btn-success-active: #6ee7b7;
+  --btn-success-text: #ffffff;
+  --btn-success-border: #10b981;
+
+  --btn-warning-bg: #f59e0b;
+  --btn-warning-hover: #fbbf24;
+  --btn-warning-active: #fcd34d;
+  --btn-warning-text: #ffffff;
+  --btn-warning-border: #f59e0b;
+
+  --btn-error-bg: #ef4444;
+  --btn-error-hover: #f87171;
+  --btn-error-active: #fca5a5;
+  --btn-error-text: #ffffff;
+  --btn-error-border: #ef4444;
+
+  --btn-ghost-bg: transparent;
+  --btn-ghost-hover: #374151;
+  --btn-ghost-active: #4b5563;
+  --btn-ghost-text: #f9fafb;
+  --btn-ghost-border: transparent;
+
+  /* Input Colors */
+  --input-bg: #374151;
+  --input-border: #4b5563;
+  --input-border-focus: #60a5fa;
+  --input-border-error: #f87171;
+  --input-text: #f9fafb;
+  --input-placeholder: #9ca3af;
+  --input-disabled-bg: #1f2937;
+  --input-disabled-text: #6b7280;
+
+  /* Card Colors */
+  --card-bg: #1e293b;
+  --card-border: #334155;
+  --card-shadow: var(--shadow-md);
+  --card-hover-shadow: var(--shadow-lg);
+
+  /* Table Colors */
+  --table-bg: #1e293b;
+  --table-header-bg: #334155;
+  --table-border: #475569;
+  --table-row-hover: #334155;
+  --table-row-selected: #1e3a8a;
+
+  /* Sidebar Colors */
+  --sidebar-bg: #1e293b;
+  --sidebar-border: #334155;
+  --sidebar-item-hover: #334155;
+  --sidebar-item-active: #1e3a8a;
+  --sidebar-item-text: #cbd5e1;
+  --sidebar-item-text-active: #93c5fd;
+
+  /* Header Colors */
+  --header-bg: #1e293b;
+  --header-border: #334155;
+  --header-text: #f8fafc;
+
+  /* Modal Colors */
+  --modal-bg: #1e293b;
+  --modal-backdrop: rgba(0, 0, 0, 0.7);
+  --modal-border: #334155;
+  --modal-shadow: var(--shadow-xl);
+
+  /* Dropdown Colors */
+  --dropdown-bg: #1e293b;
+  --dropdown-border: #334155;
+  --dropdown-shadow: var(--shadow-lg);
+  --dropdown-item-hover: #334155;
+  --dropdown-item-active: #1e3a8a;
+
+  /* Toast Colors */
+  --toast-bg: #1e293b;
+  --toast-border: #334155;
+  --toast-shadow: var(--shadow-lg);
+  --toast-success-bg: #064e3b;
+  --toast-success-border: #10b981;
+  --toast-warning-bg: #78350f;
+  --toast-warning-border: #f59e0b;
+  --toast-error-bg: #7f1d1d;
+  --toast-error-border: #ef4444;
+  --toast-info-bg: #1e3a8a;
+  --toast-info-border: #3b82f6;
+
+  /* Badge Colors */
+  --badge-primary-bg: #1e3a8a;
+  --badge-primary-text: #bfdbfe;
+  --badge-primary-border: #3b82f6;
+
+  --badge-success-bg: #064e3b;
+  --badge-success-text: #a7f3d0;
+  --badge-success-border: #10b981;
+
+  --badge-warning-bg: #78350f;
+  --badge-warning-text: #fde68a;
+  --badge-warning-border: #f59e0b;
+
+  --badge-error-bg: #7f1d1d;
+  --badge-error-text: #fecaca;
+  --badge-error-border: #ef4444;
+
+  --badge-secondary-bg: #334155;
+  --badge-secondary-text: #cbd5e1;
+  --badge-secondary-border: #475569;
+
+  /* Progress Colors */
+  --progress-bg: #374151;
+  --progress-fill: #60a5fa;
+  --progress-text: #f9fafb;
+
+  /* Switch Colors */
+  --switch-bg: #4b5563;
+  --switch-bg-checked: #3b82f6;
+  --switch-thumb: #ffffff;
+  --switch-thumb-shadow: var(--shadow-sm);
+
+  /* Checkbox Colors */
+  --checkbox-bg: #374151;
+  --checkbox-border: #4b5563;
+  --checkbox-checked-bg: #3b82f6;
+  --checkbox-checked-border: #3b82f6;
+  --checkbox-checkmark: #ffffff;
+
+  /* Radio Colors */
+  --radio-bg: #374151;
+  --radio-border: #4b5563;
+  --radio-checked-bg: #3b82f6;
+  --radio-checked-border: #3b82f6;
+  --radio-dot: #ffffff;
+
+  /* Gaming Specific Colors */
+  --gaming-gold: #ffd700;
+  --gaming-silver: #c0c0c0;
+  --gaming-bronze: #cd7f32;
+  --gaming-platinum: #e5e4e2;
+  --gaming-diamond: #b9f2ff;
+
+  --vip-bronze-bg: #451a03;
+  --vip-bronze-text: #fed7aa;
+  --vip-bronze-border: #9a3412;
+
+  --vip-silver-bg: #334155;
+  --vip-silver-text: #cbd5e1;
+  --vip-silver-border: #64748b;
+
+  --vip-gold-bg: #78350f;
+  --vip-gold-text: #fde68a;
+  --vip-gold-border: #d97706;
+
+  --vip-platinum-bg: #475569;
+  --vip-platinum-text: #e2e8f0;
+  --vip-platinum-border: #64748b;
+
+  --vip-diamond-bg: #083344;
+  --vip-diamond-text: #a5f3fc;
+  --vip-diamond-border: #0891b2;
+
+  /* Chart Colors */
+  --chart-primary: #60a5fa;
+  --chart-secondary: #34d399;
+  --chart-tertiary: #fbbf24;
+  --chart-quaternary: #f87171;
+  --chart-grid: #374151;
+  --chart-text: #9ca3af;
+
+  /* Status Colors */
+  --status-online: #34d399;
+  --status-offline: #9ca3af;
+  --status-away: #fbbf24;
+  --status-busy: #f87171;
+
+  /* Risk Level Colors */
+  --risk-low-bg: #064e3b;
+  --risk-low-text: #a7f3d0;
+  --risk-low-border: #10b981;
+
+  --risk-medium-bg: #78350f;
+  --risk-medium-text: #fde68a;
+  --risk-medium-border: #f59e0b;
+
+  --risk-high-bg: #7f1d1d;
+  --risk-high-text: #fecaca;
+  --risk-high-border: #ef4444;
+
+  --risk-critical-bg: #450a0a;
+  --risk-critical-text: #ffffff;
+  --risk-critical-border: #dc2626;
+
+  /* Transaction Status Colors */
+  --status-pending-bg: #78350f;
+  --status-pending-text: #fde68a;
+  --status-pending-border: #f59e0b;
+
+  --status-completed-bg: #064e3b;
+  --status-completed-text: #a7f3d0;
+  --status-completed-border: #10b981;
+
+  --status-failed-bg: #7f1d1d;
+  --status-failed-text: #fecaca;
+  --status-failed-border: #ef4444;
+
+  --status-cancelled-bg: #334155;
+  --status-cancelled-text: #cbd5e1;
+  --status-cancelled-border: #64748b;
+
+  /* Scrollbar Colors */
+  --scrollbar-track: #1e293b;
+  --scrollbar-thumb: #475569;
+  --scrollbar-thumb-hover: #64748b;
+
+  /* Selection Colors */
+  --selection-bg: #1e3a8a;
+  --selection-text: #bfdbfe;
+
+  /* Code Colors */
+  --code-bg: #334155;
+  --code-text: #e2e8f0;
+  --code-border: #475569;
+
+  /* Highlight Colors */
+  --highlight-bg: #78350f;
+  --highlight-text: #fde68a;
+}
+
+/* Dark theme specific scrollbar styles */
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Dark theme selection styles */
+[data-theme="dark"] ::selection {
+  background-color: var(--selection-bg);
+  color: var(--selection-text);
+} 
