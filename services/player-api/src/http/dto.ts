@@ -4,6 +4,11 @@ export const registerSchema = z.object({
   email: z.string().trim().email(),
   password: z.string().min(8),
   username: z.string().trim().min(3).max(64).optional(),
+  // Read off a `?ref=<code>` URL param at signup (see apps/player-web's
+  // register page) - a real affiliate-link parameter, not a client
+  // self-assertion of "I'm affiliate traffic". Presence/absence is what
+  // PlayerAuthService.register derives signup_channel from.
+  referralCode: z.string().trim().min(1).max(64).optional(),
 });
 export type RegisterDto = z.infer<typeof registerSchema>;
 

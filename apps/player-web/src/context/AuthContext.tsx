@@ -31,7 +31,7 @@ interface AuthContextValue {
   user: Wallet | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, username?: string) => Promise<void>;
+  register: (email: string, password: string, username?: string, referralCode?: string) => Promise<void>;
   logout: () => void;
   refreshWallet: () => Promise<void>;
   updateProfile: (input: ProfileUpdateInput) => Promise<void>;
@@ -117,12 +117,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await refreshWallet();
   };
 
-  const register = async (email: string, password: string, username?: string) => {
+  const register = async (email: string, password: string, username?: string, referralCode?: string) => {
     const fingerprint = await getDeviceFingerprint();
     const response = await apiFetch('/auth/register', {
       method: 'POST',
       headers: { 'x-device-fingerprint': fingerprint },
-      body: JSON.stringify({ email, password, username }),
+      body: JSON.stringify({ email, password, username, referralCode }),
     });
     await parseOrThrow(response);
     await refreshWallet();

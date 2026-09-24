@@ -42,6 +42,8 @@ export type UnmaskPlayerDto = z.infer<typeof unmaskPlayerSchema>;
 
 const PLAYER_STATUSES = ['ACTIVE', 'INACTIVE', 'SUSPENDED', 'BANNED', 'PENDING'] as const;
 const PLAYER_VIP_LEVELS = ['BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'DIAMOND'] as const;
+const SEARCH_TYPES = ['Normal', 'Advanced', 'Exact'] as const;
+const SIGNUP_CHANNELS = ['DIRECT', 'AFFILIATE'] as const;
 
 export const listPlayersQuerySchema = z.object({
   search: z.string().trim().min(1).optional(),
@@ -54,6 +56,15 @@ export const listPlayersQuerySchema = z.object({
   lastLoginIP: z.string().trim().min(1).optional(),
   lastLoginSince: z.string().datetime().optional(),
   noLoginSince: z.string().datetime().optional(),
+  lastDepositSince: z.string().datetime().optional(),
+  lastBetTimeSince: z.string().datetime().optional(),
+  dateOfBirthFrom: z.string().datetime().optional(),
+  dateOfBirthTo: z.string().datetime().optional(),
+  // Changes how `search` matches rather than what it matches against -
+  // see players.service.ts's list() for the three real modes.
+  searchType: z.enum(SEARCH_TYPES).optional(),
+  currencyType: z.string().trim().length(3).optional(),
+  channelType: z.enum(SIGNUP_CHANNELS).optional(),
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(200).default(20),
 });

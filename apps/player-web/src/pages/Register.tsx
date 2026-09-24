@@ -1,11 +1,18 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
+  // A real affiliate-link parameter (?ref=<code>), read once at mount and
+  // forwarded on submit - never shown/editable in the form itself, so a
+  // visitor can't just type any value in and claim to be affiliate
+  // traffic. See services/backoffice-api's Member Search "Channel Type"
+  // filter, and the add-signup-channel migration's own comment.
+  const [searchParams] = useSearchParams();
+  const referralCode = searchParams.get('ref')?.trim() || undefined;
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -17,7 +24,7 @@ export default function Register() {
     setError(null);
     setSubmitting(true);
     try {
-      await register(email, password, username.trim() || undefined);
+      await register(email, password, username.trim() || undefined, referralCode);
       navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');

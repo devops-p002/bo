@@ -14,6 +14,7 @@ type DecimalColumn = ColumnType<string, string | number | undefined, string | nu
 
 export type PlayerStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'BANNED' | 'PENDING';
 export type PlayerVipLevel = 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND';
+export type SignupChannel = 'DIRECT' | 'AFFILIATE';
 
 export interface PlayersTable {
   id: string;
@@ -39,6 +40,8 @@ export interface PlayersTable {
   last_login_country: string | null;
   last_login_user_agent: string | null;
   last_login_device: string | null;
+  signup_channel: ColumnType<SignupChannel, SignupChannel | undefined, SignupChannel>;
+  referral_code: string | null;
   created_at: CreatedAtColumn;
 }
 

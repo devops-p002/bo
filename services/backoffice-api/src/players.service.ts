@@ -1,9 +1,11 @@
 import { NotFoundError } from '@platform/errors';
 import { defineId } from '@platform/ids';
-import type { Kysely } from 'kysely';
-import type { Database, PlayerStatus, PlayerVipLevel } from './db/schema.js';
+import type { ExpressionBuilder, Kysely } from 'kysely';
+import type { Database, PlayerStatus, PlayerVipLevel, SignupChannel } from './db/schema.js';
 
 const PlayerId = defineId('PlayerId');
+
+export type SearchType = 'Normal' | 'Advanced' | 'Exact';
 
 export interface PlayerListFilter {
   search?: string | undefined;
@@ -15,6 +17,13 @@ export interface PlayerListFilter {
   lastLoginIP?: string | undefined;
   lastLoginSince?: string | undefined;
   noLoginSince?: string | undefined;
+  lastDepositSince?: string | undefined;
+  lastBetTimeSince?: string | undefined;
+  dateOfBirthFrom?: string | undefined;
+  dateOfBirthTo?: string | undefined;
+  searchType?: SearchType | undefined;
+  currencyType?: string | undefined;
+  channelType?: SignupChannel | undefined;
 }
 
 export interface PlayerListPagination {
@@ -76,6 +85,8 @@ function toApiShape(row: {
   last_login_country: string | null;
   last_login_user_agent: string | null;
   last_login_device: string | null;
+  signup_channel: SignupChannel;
+  referral_code: string | null;
   created_at: Date;
 }) {
   const fullName = [row.first_name, row.last_name].filter(Boolean).join(' ') || row.username || row.email;
@@ -103,6 +114,8 @@ function toApiShape(row: {
     lastLoginCountry: row.last_login_country,
     lastLoginUserAgent: row.last_login_user_agent,
     lastLoginDevice: row.last_login_device,
+    signupChannel: row.signup_channel,
+    referralCode: row.referral_code,
     createdAt: row.created_at.toISOString(),
   };
 }
@@ -115,9 +128,24 @@ export class PlayersService {
     let countQuery = this.db.selectFrom('players');
 
     if (filter.search) {
-      const term = `%${filter.search}%`;
-      query = query.where((eb) => eb.or([eb('username', 'ilike', term), eb('email', 'ilike', term)]));
-      countQuery = countQuery.where((eb) => eb.or([eb('username', 'ilike', term), eb('email', 'ilike', term)]));
+      // Three real modes, not just Normal - see the listPlayersQuerySchema
+      // comment. Exact does a case-insensitive equality match (the raw
+      // term, not %wrapped%); Advanced widens the match to every
+      // identity-ish column instead of just username/email; Normal is the
+      // original partial-match behavior, unchanged.
+      if (filter.searchType === 'Exact') {
+        const term = filter.search.toLowerCase();
+        query = query.where((eb) => eb.or([eb('username', '=', term), eb('email', '=', term)]));
+        countQuery = countQuery.where((eb) => eb.or([eb('username', '=', term), eb('email', '=', term)]));
+      } else if (filter.searchType === 'Advanced') {
+        const term = `%${filter.search}%`;
+        query = query.where((eb) => eb.or([eb('username', 'ilike', term), eb('email', 'ilike', term), eb('first_name', 'ilike', term), eb('last_name', 'ilike', term), eb('phone', 'ilike', term)]));
+        countQuery = countQuery.where((eb) => eb.or([eb('username', 'ilike', term), eb('email', 'ilike', term), eb('first_name', 'ilike', term), eb('last_name', 'ilike', term), eb('phone', 'ilike', term)]));
+      } else {
+        const term = `%${filter.search}%`;
+        query = query.where((eb) => eb.or([eb('username', 'ilike', term), eb('email', 'ilike', term)]));
+        countQuery = countQuery.where((eb) => eb.or([eb('username', 'ilike', term), eb('email', 'ilike', term)]));
+      }
     }
     if (filter.fullName) {
       const term = `%${filter.fullName}%`;
@@ -158,6 +186,58 @@ export class PlayersService {
       const since = new Date(filter.noLoginSince);
       query = query.where((eb) => eb.or([eb('last_login_at', 'is', null), eb('last_login_at', '<=', since)]));
       countQuery = countQuery.where((eb) => eb.or([eb('last_login_at', 'is', null), eb('last_login_at', '<=', since)]));
+    }
+    if (filter.lastDepositSince) {
+      // "Last Deposit Since <date>" = the player's most recent deposit
+      // landed on/after that date, which is equivalent to "at least one
+      // deposit row exists with created_at >= date" (if the max is >=
+      // date, one such row exists; if one exists, the max is too) - an
+      // EXISTS is simpler and cheaper than actually computing MAX per row.
+      const since = new Date(filter.lastDepositSince);
+      const hasRecentDeposit = (eb: ExpressionBuilder<Database, 'players'>) =>
+        eb.exists(
+          eb
+            .selectFrom('transactions')
+            .select('id')
+            .whereRef('transactions.player_id', '=', 'players.id')
+            .where('transactions.type', '=', 'DEPOSIT')
+            .where('transactions.created_at', '>=', since),
+        );
+      query = query.where(hasRecentDeposit);
+      countQuery = countQuery.where(hasRecentDeposit);
+    }
+    if (filter.lastBetTimeSince) {
+      // Same "EXISTS a row at least this recent" reasoning as
+      // lastDepositSince above, against bets instead of transactions.
+      const since = new Date(filter.lastBetTimeSince);
+      const hasRecentBet = (eb: ExpressionBuilder<Database, 'players'>) =>
+        eb.exists(
+          eb
+            .selectFrom('bets')
+            .select('id')
+            .whereRef('bets.player_id', '=', 'players.id')
+            .where('bets.created_at', '>=', since),
+        );
+      query = query.where(hasRecentBet);
+      countQuery = countQuery.where(hasRecentBet);
+    }
+    if (filter.dateOfBirthFrom) {
+      const from = new Date(filter.dateOfBirthFrom);
+      query = query.where('date_of_birth', '>=', from);
+      countQuery = countQuery.where('date_of_birth', '>=', from);
+    }
+    if (filter.dateOfBirthTo) {
+      const to = new Date(filter.dateOfBirthTo);
+      query = query.where('date_of_birth', '<=', to);
+      countQuery = countQuery.where('date_of_birth', '<=', to);
+    }
+    if (filter.currencyType) {
+      query = query.where('currency', '=', filter.currencyType);
+      countQuery = countQuery.where('currency', '=', filter.currencyType);
+    }
+    if (filter.channelType) {
+      query = query.where('signup_channel', '=', filter.channelType);
+      countQuery = countQuery.where('signup_channel', '=', filter.channelType);
     }
 
     const totalRow = await countQuery.select((eb) => eb.fn.countAll<string>().as('count')).executeTakeFirstOrThrow();

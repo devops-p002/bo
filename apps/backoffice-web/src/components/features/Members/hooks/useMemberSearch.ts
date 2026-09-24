@@ -344,16 +344,10 @@ export const useMemberSearch = () => {
   }, [notification, visibleAccountColumns, visibleProviderColumns]);
 
   // Builds the real filter this app's REST API accepts (services/backoffice-api's
-  // GET /players). Fields with no backend equivalent (lastDepositSince,
-  // lastBetTimeSince, phoneNumberType, dateOfBirthFrom/To, searchType,
-  // currencyType, channelType, channelCode) are ignored here - they're
-  // disabled in AccountSearchForm so the UI doesn't pretend they filter
-  // anything. fullName/phone match real columns (see players.service.ts)
-  // now that apps/player-web's "Complete your profile" page can populate
-  // them. lastLoginIP/lastLoginSince/noLoginSince are real too now -
-  // last_login_ip/last_login_at were already populated at login time
-  // (services/player-api's PlayerAuthService), they just had no filter
-  // wired to them until now.
+  // GET /players). Only phoneNumberType has no backend equivalent left
+  // (there's no Mobile/Landline distinction on the phone column) - every
+  // other field on this form now maps to a real column or a real,
+  // documented query behavior (see players.service.ts's list()).
   const buildFilter = () => {
     const filter: any = {};
     const search = searchData.username?.trim() || searchData.email?.trim();
@@ -373,6 +367,19 @@ export const useMemberSearch = () => {
     if (searchData.lastLoginIP?.trim()) filter.lastLoginIP = searchData.lastLoginIP.trim();
     if (searchData.lastLoginSince) filter.lastLoginSince = new Date(searchData.lastLoginSince).toISOString();
     if (searchData.noLoginSince) filter.noLoginSince = new Date(searchData.noLoginSince).toISOString();
+    if (searchData.lastDepositSince) filter.lastDepositSince = new Date(searchData.lastDepositSince).toISOString();
+    if (searchData.lastBetTimeSince) filter.lastBetTimeSince = new Date(searchData.lastBetTimeSince).toISOString();
+    if (searchData.dateOfBirthFrom) filter.dateOfBirthFrom = new Date(searchData.dateOfBirthFrom).toISOString();
+    if (searchData.dateOfBirthTo) filter.dateOfBirthTo = new Date(searchData.dateOfBirthTo).toISOString();
+    if (searchData.searchType && searchData.searchType !== 'Normal') {
+      filter.searchType = searchData.searchType;
+    }
+    if (searchData.currencyType && searchData.currencyType !== 'All') {
+      filter.currencyType = searchData.currencyType;
+    }
+    if (searchData.channelType && searchData.channelType !== 'All') {
+      filter.channelType = searchData.channelType;
+    }
     return filter;
   };
 

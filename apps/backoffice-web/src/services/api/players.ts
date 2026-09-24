@@ -11,6 +11,13 @@ export interface PlayerListFilter {
   lastLoginIP?: string;
   lastLoginSince?: string;
   noLoginSince?: string;
+  lastDepositSince?: string;
+  lastBetTimeSince?: string;
+  dateOfBirthFrom?: string;
+  dateOfBirthTo?: string;
+  searchType?: string;
+  currencyType?: string;
+  channelType?: string;
 }
 
 export interface PlayerListPagination {
@@ -38,6 +45,13 @@ export async function listPlayers(filter: PlayerListFilter, pagination: PlayerLi
   if (filter.lastLoginIP) params.set('lastLoginIP', filter.lastLoginIP);
   if (filter.lastLoginSince) params.set('lastLoginSince', filter.lastLoginSince);
   if (filter.noLoginSince) params.set('noLoginSince', filter.noLoginSince);
+  if (filter.lastDepositSince) params.set('lastDepositSince', filter.lastDepositSince);
+  if (filter.lastBetTimeSince) params.set('lastBetTimeSince', filter.lastBetTimeSince);
+  if (filter.dateOfBirthFrom) params.set('dateOfBirthFrom', filter.dateOfBirthFrom);
+  if (filter.dateOfBirthTo) params.set('dateOfBirthTo', filter.dateOfBirthTo);
+  if (filter.searchType) params.set('searchType', filter.searchType);
+  if (filter.currencyType) params.set('currencyType', filter.currencyType);
+  if (filter.channelType) params.set('channelType', filter.channelType);
   params.set('page', String(pagination.page));
   params.set('limit', String(pagination.limit));
 

@@ -28,6 +28,13 @@ export class PlayersController {
       lastLoginIP: query.lastLoginIP,
       lastLoginSince: query.lastLoginSince,
       noLoginSince: query.noLoginSince,
+      lastDepositSince: query.lastDepositSince,
+      lastBetTimeSince: query.lastBetTimeSince,
+      dateOfBirthFrom: query.dateOfBirthFrom,
+      dateOfBirthTo: query.dateOfBirthTo,
+      searchType: query.searchType,
+      currencyType: query.currencyType,
+      channelType: query.channelType,
     };
     return this.players.list(filter, { page: query.page, limit: query.limit });
   }

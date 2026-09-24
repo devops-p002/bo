@@ -78,32 +78,38 @@ const AccountSearchForm = ({
         </select>
       </div>
 
-      {/* Last Deposit Since - no backend equivalent (User has no
-          per-transaction-type "last deposit at" field) */}
+      {/* Last Deposit Since - real: matches players who have at least one
+          COMPLETED-or-not deposit transaction on/after this date (an
+          EXISTS check against transactions.type='DEPOSIT' - see
+          players.service.ts's list()). */}
       <div>
-        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-          Last Deposit Since <span className="italic font-normal">(not supported by backend)</span>
+        <label className={`block text-xs font-medium mb-1 ${
+          isDarkTheme ? 'text-gray-300' : 'text-gray-700'
+        }`}>
+          Last Deposit Since
         </label>
         <DateTimePicker
           value={searchData.lastDepositSince}
           onChange={(date) => onInputChange('lastDepositSince', date)}
           placeholder="Last Deposit Since"
-          disabled
-          className="w-full text-xs opacity-50"
+          className="w-full text-xs"
         />
       </div>
 
-      {/* Last Bet Time Since - no backend equivalent */}
+      {/* Last Bet Time Since - real: matches players with at least one bet
+          on/after this date (same EXISTS pattern as Last Deposit Since,
+          against the bets table). */}
       <div>
-        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-          Last Bet Time Since <span className="italic font-normal">(not supported by backend)</span>
+        <label className={`block text-xs font-medium mb-1 ${
+          isDarkTheme ? 'text-gray-300' : 'text-gray-700'
+        }`}>
+          Last Bet Time Since
         </label>
         <DateTimePicker
           value={searchData.lastBetTimeSince}
           onChange={(date) => onInputChange('lastBetTimeSince', date)}
           placeholder="Last Bet Time Since"
-          disabled
-          className="w-full text-xs opacity-50"
+          className="w-full text-xs"
         />
       </div>
 
@@ -234,12 +240,14 @@ const AccountSearchForm = ({
         </div>
       </div>
 
-      {/* Date of Birth Range - no backend filter for this */}
+      {/* Date of Birth Range - date_of_birth is a real column (populated
+          via apps/player-web's "Complete your profile" page), just needed
+          a filter wired to it. */}
       <div>
         <label className={`block text-xs font-medium mb-1 ${
           isDarkTheme ? 'text-gray-300' : 'text-gray-700'
         }`}>
-          Date of Birth Range <span className="italic font-normal">(not supported by backend)</span>
+          Date of Birth Range
         </label>
         <div className="flex space-x-1">
           <div className="flex-1">
@@ -247,8 +255,7 @@ const AccountSearchForm = ({
               value={searchData.dateOfBirthFrom}
               onChange={(date) => onInputChange('dateOfBirthFrom', date)}
               placeholder="From"
-              disabled
-              className="w-full text-xs opacity-50"
+              className="w-full text-xs"
             />
           </div>
           <div className="flex-1">
@@ -256,8 +263,7 @@ const AccountSearchForm = ({
               value={searchData.dateOfBirthTo}
               onChange={(date) => onInputChange('dateOfBirthTo', date)}
               placeholder="To"
-              disabled
-              className="w-full text-xs opacity-50"
+              className="w-full text-xs"
             />
           </div>
         </div>
@@ -280,19 +286,21 @@ const AccountSearchForm = ({
         />
       </div>
 
-      {/* Search Type - the backend only offers one generic ILIKE `search`
-          match; there's no Normal/Advanced/Exact mode to select */}
+      {/* Search Type - changes how the Username/Email search matches, not
+          what it matches against: Normal is the original partial (ILIKE)
+          match; Exact is a case-insensitive equality match; Advanced
+          widens the match to Full Name/Phone too. See
+          players.service.ts's list(). */}
       <div>
         <label className={`block text-xs font-medium mb-1 ${
           isDarkTheme ? 'text-gray-300' : 'text-gray-700'
         }`}>
-          Search Type <span className="italic font-normal">(not supported by backend)</span>
+          Search Type
         </label>
         <select
           value={searchData.searchType}
           onChange={(e) => onInputChange('searchType', e.target.value)}
-          disabled
-          className={`w-full px-2 py-1 text-xs border rounded-md cursor-not-allowed opacity-50 ${
+          className={`w-full px-2 py-1 text-xs border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
             isDarkTheme
               ? 'bg-gray-700 border-gray-600 text-gray-300'
               : 'bg-white border-gray-300'
@@ -304,19 +312,18 @@ const AccountSearchForm = ({
         </select>
       </div>
 
-      {/* Currency Type - User.currency is a real field, but there's no
-          filter for it in UserFilterInput */}
+      {/* Currency Type - real field (players.currency, set at
+          registration), now has a real filter for it. */}
       <div>
         <label className={`block text-xs font-medium mb-1 ${
           isDarkTheme ? 'text-gray-300' : 'text-gray-700'
         }`}>
-          Currency Type <span className="italic font-normal">(not supported by backend)</span>
+          Currency Type
         </label>
         <select
           value={searchData.currencyType}
           onChange={(e) => onInputChange('currencyType', e.target.value)}
-          disabled
-          className={`w-full px-2 py-1 text-xs border rounded-md cursor-not-allowed opacity-50 ${
+          className={`w-full px-2 py-1 text-xs border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
             isDarkTheme
               ? 'bg-gray-700 border-gray-600 text-gray-300'
               : 'bg-white border-gray-300'
@@ -355,28 +362,31 @@ const AccountSearchForm = ({
         </select>
       </div>
 
-      {/* Channel Type - no affiliate/referral/channel concept on the
-          backend at all */}
+      {/* Channel Type - real: signup_channel is set once, at
+          registration, from whether apps/player-web's register page saw a
+          ?ref=<code> URL param (AFFILIATE) or not (DIRECT) - see the
+          add-signup-channel migration's own comment. No "Referral" value:
+          that would be a genuinely separate player-to-player referral
+          subsystem this signup flow doesn't build, so it's not offered as
+          a selectable value that could never match a real row. */}
       <div>
         <label className={`block text-xs font-medium mb-1 ${
           isDarkTheme ? 'text-gray-300' : 'text-gray-700'
         }`}>
-          Channel Type <span className="italic font-normal">(not supported by backend)</span>
+          Channel Type
         </label>
         <select
           value={searchData.channelType}
           onChange={(e) => onInputChange('channelType', e.target.value)}
-          disabled
-          className={`w-full px-2 py-1 text-xs border rounded-md cursor-not-allowed opacity-50 ${
+          className={`w-full px-2 py-1 text-xs border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
             isDarkTheme
               ? 'bg-gray-700 border-gray-600 text-gray-300'
               : 'bg-white border-gray-300'
           }`}
         >
           <option value="All">All</option>
-          <option value="Direct">Direct</option>
-          <option value="Affiliate">Affiliate</option>
-          <option value="Refferal">Refferal</option>
+          <option value="DIRECT">Direct</option>
+          <option value="AFFILIATE">Affiliate</option>
         </select>
       </div>
     </div>

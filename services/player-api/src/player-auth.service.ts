@@ -30,6 +30,7 @@ export interface RegisterPlayerInput {
   email: string;
   password: string;
   username?: string | undefined;
+  referralCode?: string | undefined;
 }
 
 export interface PlayerAuthResult {
@@ -66,6 +67,12 @@ export class PlayerAuthService {
         currency: 'USD',
         status: 'ACTIVE',
         vip_level: 'BRONZE',
+        // Real, mechanically-derived from the signup request itself - a
+        // ?ref=<code> URL param apps/player-web's register page reads and
+        // forwards, never a client self-assertion of "I'm affiliate
+        // traffic". See the add-signup-channel migration's own comment.
+        signup_channel: input.referralCode ? 'AFFILIATE' : 'DIRECT',
+        referral_code: input.referralCode ?? null,
         ...this.buildLoginContext(ip, userAgent),
       })
       .execute();
