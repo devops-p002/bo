@@ -18,7 +18,7 @@ export interface PlayerListPagination {
 }
 
 export interface CreatePlayerInput {
-  username: string;
+  username?: string | undefined;
   email: string;
   firstName?: string | undefined;
   lastName?: string | undefined;
@@ -50,7 +50,7 @@ function toNumber(value: string): number {
 // rather than composing first/last itself.
 function toApiShape(row: {
   id: string;
-  username: string;
+  username: string | null;
   email: string;
   first_name: string | null;
   last_name: string | null;
@@ -70,7 +70,7 @@ function toApiShape(row: {
   last_login_ip: string | null;
   created_at: Date;
 }) {
-  const fullName = [row.first_name, row.last_name].filter(Boolean).join(' ') || row.username;
+  const fullName = [row.first_name, row.last_name].filter(Boolean).join(' ') || row.username || row.email;
   return {
     id: row.id,
     username: row.username,
@@ -157,7 +157,7 @@ export class PlayersService {
       .insertInto('players')
       .values({
         id,
-        username: input.username,
+        username: input.username ?? null,
         email: input.email.toLowerCase(),
         first_name: input.firstName ?? null,
         last_name: input.lastName ?? null,

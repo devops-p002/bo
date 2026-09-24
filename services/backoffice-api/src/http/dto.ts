@@ -55,7 +55,7 @@ export const listPlayersQuerySchema = z.object({
 export type ListPlayersQueryDto = z.infer<typeof listPlayersQuerySchema>;
 
 export const createPlayerSchema = z.object({
-  username: z.string().trim().min(3).max(64),
+  username: z.string().trim().min(3).max(64).optional(),
   email: z.string().trim().email(),
   firstName: z.string().trim().min(1).optional(),
   lastName: z.string().trim().min(1).optional(),

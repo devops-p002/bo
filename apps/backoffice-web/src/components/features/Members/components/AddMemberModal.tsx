@@ -31,19 +31,19 @@ const AddMemberModal = ({ isOpen, onClose, formData, onChange, onSubmit, saving,
         </div>
       )}
       <Input
-        label="Username"
-        name="username"
-        value={formData.username}
-        onChange={handleChange}
-        required
-      />
-      <Input
         label="Email"
         name="email"
         type="email"
         value={formData.email}
         onChange={handleChange}
         required
+      />
+      <Input
+        label="Username"
+        name="username"
+        value={formData.username}
+        onChange={handleChange}
+        placeholder="Optional - a display handle, not used to log in"
       />
       <Input
         label="First Name"

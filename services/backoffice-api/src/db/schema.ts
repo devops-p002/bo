@@ -99,7 +99,7 @@ type DecimalColumn = ColumnType<string, string | number | undefined, string | nu
 
 export interface PlayersTable {
   id: string;
-  username: string;
+  username: string | null;
   email: string;
   first_name: string | null;
   last_name: string | null;

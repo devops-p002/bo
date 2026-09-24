@@ -193,7 +193,7 @@ const MemberProfile = ({ memberId, isPopup = false }) => {
 
           {expandedSections.general && (
             <div className="space-y-0">
-              <DataRow label="Username" value={user.username} />
+              <DataRow label="Username" value={user.username || '-'} />
               <DataRow label="Full Name" value={user.fullName} />
               <DataRow label="Birthday" value={user.dateOfBirth ? formatDate(user.dateOfBirth) : '-'} />
               <DataRow label="VIP Level" value={user.vipLevel} />

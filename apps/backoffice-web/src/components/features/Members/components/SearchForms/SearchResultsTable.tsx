@@ -155,8 +155,10 @@ const SearchResultsTable = ({
               {visibleAccountColumns.registrationTime && <td className="px-2 py-2 border-r border-gray-300">{formatDateTime(row.createdAt)}</td>}
               {visibleAccountColumns.username && <td className="px-2 py-2 border-r border-gray-300">
                 {/* Navigates using the member's real id, not their username
-                    (the profile route looks members up by id) */}
-                <span className="text-blue-500 hover:text-blue-600 cursor-pointer" onClick={() => onUsernameClick(row.id)}>{row.username}</span>
+                    (the profile route looks members up by id). Username is
+                    optional (identity/login is email-only) - falls back to
+                    email so this cell is never blank. */}
+                <span className="text-primary-500 hover:text-primary-600 cursor-pointer" onClick={() => onUsernameClick(row.id)}>{row.username || row.email}</span>
               </td>}
               {visibleAccountColumns.name && <td className="px-2 py-2 border-r border-gray-300">{row.fullName || '-'}</td>}
               {visibleAccountColumns.email && <td className="px-2 py-2 border-r border-gray-300">{row.email}</td>}

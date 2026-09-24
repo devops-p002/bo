@@ -174,22 +174,24 @@ export const useMemberSearch = () => {
   }, []);
 
   const handleAddSubmit = useCallback(async () => {
-    if (!addFormData.username.trim() || !addFormData.email.trim()) {
-      setAddError('Username and email are required.');
+    if (!addFormData.email.trim()) {
+      setAddError('Email is required.');
       return;
     }
     try {
       setAddSaving(true);
       setAddError(null);
       await createPlayer({
-        username: addFormData.username.trim(),
+        // Username is optional - identity and login are email-only;
+        // username, when set, is just a display handle.
+        username: addFormData.username.trim() || undefined,
         email: addFormData.email.trim(),
         firstName: addFormData.firstName.trim() || undefined,
         lastName: addFormData.lastName.trim() || undefined,
         phone: addFormData.phone.trim() || undefined,
         vipLevel: addFormData.vipLevel,
       });
-      notification.success(`Member "${addFormData.username}" created.`);
+      notification.success(`Member "${addFormData.username.trim() || addFormData.email}" created.`);
       setIsAddModalOpen(false);
       setRefreshToken((n) => n + 1);
     } catch (err: any) {
