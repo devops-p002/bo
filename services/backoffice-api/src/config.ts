@@ -14,7 +14,7 @@ const schema = z.object({
   // an explicit CORS allow-list (with credentials, for the session
   // cookie) rather than same-origin trust a Next.js API-route proxy
   // would have given it.
-  CORS_ORIGIN: nonEmptyString.default('https://back-office.admin.betqueen.live'),
+  CORS_ORIGIN: nonEmptyString.default('https://back-office-admin.betqueen.live'),
 
   // Downstream services maker-checker approval actually executes
   // against.

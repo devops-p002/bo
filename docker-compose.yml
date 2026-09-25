@@ -61,9 +61,9 @@ services:
       context: .
       dockerfile: apps/backoffice-web/Dockerfile
       args:
-        REACT_APP_API_URL: ${BACKOFFICE_WEB_API_URL:-https://api-back-office.admin.betqueen.live}
-        REACT_APP_GRAPHQL_HTTP_URL: ${BACKOFFICE_WEB_API_URL:-https://api-back-office.admin.betqueen.live}/graphql
-        REACT_APP_GRAPHQL_WS_URL: ${BACKOFFICE_WEB_WS_URL:-wss://api-back-office.admin.betqueen.live/graphql}
+        REACT_APP_API_URL: ${BACKOFFICE_WEB_API_URL:-https://api-back-office-admin.betqueen.live}
+        REACT_APP_GRAPHQL_HTTP_URL: ${BACKOFFICE_WEB_API_URL:-https://api-back-office-admin.betqueen.live}/graphql
+        REACT_APP_GRAPHQL_WS_URL: ${BACKOFFICE_WEB_WS_URL:-wss://api-back-office-admin.betqueen.live/graphql}
     restart: unless-stopped
     ports:
       - "127.0.0.1:6100:80"
