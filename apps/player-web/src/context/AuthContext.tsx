@@ -17,6 +17,7 @@ export interface Wallet {
   phone: string | null;
   dateOfBirth: string | null;
   country: string | null;
+  createdAt: string;
 }
 
 export interface ProfileUpdateInput {
