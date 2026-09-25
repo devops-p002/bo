@@ -36,11 +36,12 @@ export default function Register() {
   return (
     <div className="max-w-sm mx-auto">
       <div className="card p-6">
-        <h1 className="text-xl font-bold mb-1">Create account</h1>
+        <video src="/betqueen-spin.webm" poster="/betqueen-logo.png" autoPlay loop muted playsInline className="w-24 h-24 mx-auto mb-3" />
+        <h1 className="text-xl font-bold mb-1 text-center">Create account</h1>
         {/* Identity/login is email-only per CLAUDE.md - username is
             optional and display-only, never required to sign up or log
             in. */}
-        <p className="text-sm text-surface-50/50 mb-5">Email is how you'll log in - username is optional.</p>
+        <p className="text-sm text-surface-50/50 mb-5 text-center">Email is how you'll log in - username is optional.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

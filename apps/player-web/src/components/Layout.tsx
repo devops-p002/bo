@@ -31,6 +31,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       >
         <div className="h-16 flex items-center px-5 border-b border-surface-600">
           <Link to="/" className="flex items-center gap-2 font-extrabold text-lg tracking-tight">
+            <img src="/betqueen-logo.png" alt="" className="w-8 h-8 rounded-full" />
             <span className="text-accent-400">Bet</span>Queen
           </Link>
         </div>
@@ -68,6 +69,14 @@ export default function Layout({ children }: { children: ReactNode }) {
           <button className="lg:hidden text-xl px-2" onClick={() => setSidebarOpen(true)} aria-label="Open menu">
             &#9776;
           </button>
+
+          {/* The sidebar's own brand mark is off-screen until opened on
+              mobile (lg:static/-translate-x-full above) - shown here too
+              so small screens aren't brandless until the menu is tapped. */}
+          <Link to="/" className="lg:hidden flex items-center gap-1.5 font-extrabold text-sm tracking-tight">
+            <img src="/betqueen-logo.png" alt="" className="w-6 h-6 rounded-full" />
+            <span className="text-accent-400">Bet</span>Queen
+          </Link>
 
           <div className="flex-1" />
 

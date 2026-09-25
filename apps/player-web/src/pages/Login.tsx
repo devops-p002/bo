@@ -28,8 +28,9 @@ export default function Login() {
   return (
     <div className="max-w-sm mx-auto">
       <div className="card p-6">
-        <h1 className="text-xl font-bold mb-1">Log in</h1>
-        <p className="text-sm text-surface-50/50 mb-5">Welcome back to BetQueen.</p>
+        <video src="/betqueen-spin.webm" poster="/betqueen-logo.png" autoPlay loop muted playsInline className="w-24 h-24 mx-auto mb-3" />
+        <h1 className="text-xl font-bold mb-1 text-center">Log in</h1>
+        <p className="text-sm text-surface-50/50 mb-5 text-center">Welcome back to BetQueen.</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
