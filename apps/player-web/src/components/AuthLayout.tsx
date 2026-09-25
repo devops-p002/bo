@@ -1,5 +1,4 @@
-import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 
 /**
  * Full-screen standalone shell for Login/Register - deliberately NOT
@@ -10,8 +9,20 @@ import { Link } from 'react-router-dom';
  * CSS-drawn suit glyphs for depth - no fabricated illustration assets
  * exist for this brand, so this doesn't try to fake the elaborate 3D
  * scene a reference design might show.
+ *
+ * Rendered as a React Router layout route (App.tsx wraps /login and
+ * /register as its children, via <Outlet/> below) rather than each page
+ * wrapping its own copy of this component. Earlier, Login and Register
+ * each rendered their own <AuthLayout>{content}</AuthLayout>, so
+ * switching between them unmounted one <video> element and mounted a
+ * brand new one - a real, visible flicker/restart, not just a style
+ * glitch, since a freshly-mounted <video> has to re-fetch and re-decode
+ * from scratch even though it's the exact same file already in the
+ * browser cache. As a single layout route, this component (and both its
+ * <video> elements) stays mounted continuously across that navigation -
+ * only the Outlet's child (the Login or Register form itself) swaps.
  */
-export default function AuthLayout({ children }: { children: ReactNode }) {
+export default function AuthLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-surface-900">
       <header className="h-16 shrink-0 flex items-center justify-between px-4 sm:px-6 border-b border-surface-700">
@@ -67,7 +78,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
               playsInline
               className="lg:hidden w-20 h-20 mx-auto mb-4"
             />
-            {children}
+            <Outlet />
           </div>
         </div>
       </div>

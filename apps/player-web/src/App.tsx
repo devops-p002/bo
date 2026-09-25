@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import AuthLayout from './components/AuthLayout';
 import Layout from './components/Layout';
 import ProtectedRoute from './router/ProtectedRoute';
 import Home from './pages/Home';
@@ -15,13 +16,19 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          {/* Login/Register are standalone full-screen pages (AuthLayout,
-              inside each page component) - deliberately not nested inside
-              the sidebar/header Layout below, the same way a real casino
-              site's own auth screens don't show its lobby nav around the
-              form. */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          {/* Login/Register are standalone full-screen pages, deliberately
+              not nested inside the sidebar/header Layout below (a real
+              casino site's own auth screens don't show its lobby nav
+              around the form). AuthLayout is a layout route here (renders
+              an <Outlet/>) rather than something each page wraps itself
+              in, so it - and its <video> elements - stays mounted while
+              navigating between the two, instead of unmounting/
+              remounting (and the video visibly flickering/restarting)
+              every time. */}
+          <Route element={<AuthLayout />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+          </Route>
           <Route
             path="*"
             element={

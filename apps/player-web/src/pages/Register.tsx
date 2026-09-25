@@ -2,7 +2,6 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import AuthLayout from '../components/AuthLayout';
 
 export default function Register() {
   const { register } = useAuth();
@@ -35,7 +34,7 @@ export default function Register() {
   };
 
   return (
-    <AuthLayout>
+    <>
       <h1 className="text-2xl font-bold mb-1 text-center">Create account</h1>
       {/* Identity/login is email-only per CLAUDE.md - username is
           optional and display-only, never required to sign up or log
@@ -74,6 +73,6 @@ export default function Register() {
           Log in
         </Link>
       </p>
-    </AuthLayout>
+    </>
   );
 }

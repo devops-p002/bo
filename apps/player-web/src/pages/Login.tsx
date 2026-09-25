@@ -2,7 +2,6 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import AuthLayout from '../components/AuthLayout';
 
 export default function Login() {
   const { login } = useAuth();
@@ -27,7 +26,7 @@ export default function Login() {
   };
 
   return (
-    <AuthLayout>
+    <>
       <h1 className="text-2xl font-bold mb-1 text-center">Log in</h1>
       <p className="text-sm text-surface-50/50 mb-6 text-center">Welcome back to BetQueen.</p>
 
@@ -52,6 +51,6 @@ export default function Login() {
           Sign up
         </Link>
       </p>
-    </AuthLayout>
+    </>
   );
 }
