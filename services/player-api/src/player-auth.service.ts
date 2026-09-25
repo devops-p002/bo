@@ -1,4 +1,4 @@
-import { ConflictError, UnauthenticatedError } from '@platform/errors';
+import { ConflictError, UnauthenticatedError, ValidationError } from '@platform/errors';
 import { defineId } from '@platform/ids';
 import { sql } from 'kysely';
 import type { Kysely } from 'kysely';
@@ -150,6 +150,35 @@ export class PlayerAuthService {
       last_login_user_agent: userAgent ?? null,
       last_login_device: classifyDevice(userAgent),
     };
+  }
+
+  async changePassword(playerId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const player = await this.db.selectFrom('players').select('password_hash').where('id', '=', playerId).executeTakeFirstOrThrow();
+    const ok = await verifyPassword(player.password_hash ?? DUMMY_PASSWORD_HASH, currentPassword);
+    if (!ok) throw new ValidationError('Current password is incorrect');
+
+    const passwordHash = await hashPassword(newPassword);
+    await this.db.updateTable('players').set({ password_hash: passwordHash }).where('id', '=', playerId).execute();
+  }
+
+  // Own rows only, most recently seen first - the "Login & Security"
+  // device list. See recordDevice's comment for what a row represents.
+  async listDevices(playerId: string) {
+    const rows = await this.db
+      .selectFrom('player_devices')
+      .select(['id', 'user_agent', 'ip_address', 'first_seen_at', 'last_seen_at', 'login_count'])
+      .where('player_id', '=', playerId)
+      .orderBy('last_seen_at', 'desc')
+      .execute();
+    return rows.map((row) => ({
+      id: row.id,
+      userAgent: row.user_agent,
+      ipAddress: row.ip_address,
+      device: classifyDevice(row.user_agent),
+      firstSeenAt: row.first_seen_at.toISOString(),
+      lastSeenAt: row.last_seen_at.toISOString(),
+      loginCount: row.login_count,
+    }));
   }
 
   async logout(sessionId: string): Promise<void> {

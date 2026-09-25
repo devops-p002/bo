@@ -93,10 +93,32 @@ export interface GamesTable {
   created_at: CreatedAtColumn;
 }
 
+export type BetStatus = 'PENDING' | 'SETTLED' | 'PARTIALLY_SETTLED' | 'CANCELLED' | 'VOID';
+
+// Duplicated subset of backoffice-api's bets schema - see this file's
+// top-of-file comment on the "no cross-service imports" rule. Read-only
+// here: player-api has no INSERT/UPDATE grant on this table, see the
+// grant-player-bets-select migration.
+export interface BetsTable {
+  id: string;
+  player_id: string;
+  game_id: string;
+  type: string;
+  status: ColumnType<BetStatus, BetStatus | undefined, BetStatus>;
+  amount: DecimalColumn;
+  currency: ColumnType<string, string | undefined, string>;
+  odds: ColumnType<string | null, string | number | null | undefined, string | number | null>;
+  potential_win: DecimalColumn;
+  win_amount: ColumnType<string | null, string | number | null | undefined, string | number | null>;
+  created_at: CreatedAtColumn;
+  settled_at: NullableTimestampColumn;
+}
+
 export interface Database {
   players: PlayersTable;
   transactions: TransactionsTable;
   player_sessions: PlayerSessionsTable;
   player_devices: PlayerDevicesTable;
   games: GamesTable;
+  bets: BetsTable;
 }

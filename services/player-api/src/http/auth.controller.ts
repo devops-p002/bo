@@ -4,8 +4,8 @@ import { PLAYER_API_CONFIG } from '../config.js';
 import type { PlayerApiConfig } from '../config.js';
 import { PlayerAuthService } from '../player-auth.service.js';
 import { WalletService } from '../wallet.service.js';
-import type { LoginDto, RegisterDto, UpdateProfileDto } from './dto.js';
-import { loginSchema, registerSchema, updateProfileSchema } from './dto.js';
+import type { ChangePasswordDto, LoginDto, RegisterDto, UpdateProfileDto } from './dto.js';
+import { changePasswordSchema, loginSchema, registerSchema, updateProfileSchema } from './dto.js';
 import type { AuthenticatedPlayerRequest } from './jwt-auth.guard.js';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
 import { SESSION_COOKIE_NAME } from './tokens.js';
@@ -57,6 +57,19 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async updateMe(@Req() req: AuthenticatedPlayerRequest, @Body(new ZodValidationPipe(updateProfileSchema)) body: UpdateProfileDto) {
     return this.wallet.updateProfile(req.playerId!, body);
+  }
+
+  @Patch('password')
+  @UseGuards(JwtAuthGuard)
+  async changePassword(@Req() req: AuthenticatedPlayerRequest, @Body(new ZodValidationPipe(changePasswordSchema)) body: ChangePasswordDto) {
+    await this.playerAuth.changePassword(req.playerId!, body.currentPassword, body.newPassword);
+    return { ok: true };
+  }
+
+  @Get('devices')
+  @UseGuards(JwtAuthGuard)
+  async devices(@Req() req: AuthenticatedPlayerRequest) {
+    return this.playerAuth.listDevices(req.playerId!);
   }
 
   // apps/player-web/src/lib/fingerprint.ts sends this on every register/

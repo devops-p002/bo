@@ -23,6 +23,7 @@ function toPlayerShape(row: {
   phone: string | null;
   date_of_birth: Date | null;
   country: string | null;
+  created_at: Date;
 }) {
   return {
     id: row.id,
@@ -38,6 +39,7 @@ function toPlayerShape(row: {
     phone: row.phone,
     dateOfBirth: row.date_of_birth ? row.date_of_birth.toISOString().slice(0, 10) : null,
     country: row.country,
+    createdAt: row.created_at.toISOString(),
   };
 }
 
@@ -93,6 +95,7 @@ const PLAYER_SHAPE_COLUMNS = [
   'phone',
   'date_of_birth',
   'country',
+  'created_at',
 ] as const;
 
 export class WalletService {
