@@ -10,6 +10,13 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Wallet from './pages/Wallet';
 import Profile from './pages/Profile';
+import PersonalInfo from './pages/profile/PersonalInfo';
+import LoginSecurity from './pages/profile/LoginSecurity';
+import Verification from './pages/profile/Verification';
+import TransactionRecords from './pages/profile/TransactionRecords';
+import BettingRecords from './pages/profile/BettingRecords';
+import ReferFriend from './pages/profile/ReferFriend';
+import Notifications from './pages/profile/Notifications';
 import VipClub from './pages/VipClub';
 import ComingSoon from './pages/ComingSoon';
 
@@ -55,6 +62,17 @@ export default function App() {
                       </ProtectedRoute>
                     }
                   />
+                  {[
+                    { path: '/profile/personal-info', element: <PersonalInfo /> },
+                    { path: '/profile/security', element: <LoginSecurity /> },
+                    { path: '/profile/verification', element: <Verification /> },
+                    { path: '/profile/transactions', element: <TransactionRecords /> },
+                    { path: '/profile/bets', element: <BettingRecords /> },
+                    { path: '/profile/refer', element: <ReferFriend /> },
+                    { path: '/profile/notifications', element: <Notifications /> },
+                  ].map(({ path, element }) => (
+                    <Route key={path} path={path} element={<ProtectedRoute>{element}</ProtectedRoute>} />
+                  ))}
                   <Route path="/vip-club" element={<VipClub />} />
                   {/* No fishing/arcade/lottery/sportsbook/promotions/RG/support
                       backend exists yet - honest placeholders rather than

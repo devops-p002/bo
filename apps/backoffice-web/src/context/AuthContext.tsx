@@ -27,7 +27,7 @@ const FULL_PERMISSIONS = [
   'members.view', 'members.group.manage', 'members.vip.manage', 'members.mass.update',
   'payments.view', 'payments.deposit.view', 'payments.withdrawal.view', 'payments.adjustment.manage',
   'payments.bank.manage', 'payments.gateway.manage', 'payments.settings.manage', 'payments.bank.view',
-  'risk.view', 'risk.trace.view', 'risk.analysis.view', 'risk.highroller.view',
+  'risk.view', 'risk.trace.view', 'risk.analysis.view', 'risk.highroller.view', 'risk.verification.view',
   'bets.view', 'bets.limits.manage', 'bets.settlement.manage', 'bets.patterns.view', 'bets.pending.view',
   'marketing.view', 'marketing.bonus.manage', 'marketing.bonus.issue', 'marketing.bonus.auto',
   'reports.view', 'reports.bonus.view', 'reports.payment.view', 'reports.turnover.view',

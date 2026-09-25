@@ -233,6 +233,36 @@ export interface BetsTable {
   settled_at: NullableTimestampColumn;
 }
 
+export type KycDocumentType = 'PASSPORT' | 'DRIVERS_LICENSE' | 'NATIONAL_ID';
+export type KycStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export interface KycVerificationsTable {
+  id: string;
+  player_id: string;
+  document_type: ColumnType<KycDocumentType, KycDocumentType | undefined, KycDocumentType>;
+  document_number: string;
+  expiry_date: ColumnType<Date, string | Date | undefined, string | Date>;
+  front_image_path: string;
+  back_image_path: string;
+  selfie_image_path: string;
+  status: ColumnType<KycStatus, KycStatus | undefined, KycStatus>;
+  rejection_reason: string | null;
+  reviewed_by: string | null;
+  reviewed_at: NullableTimestampColumn;
+  created_at: CreatedAtColumn;
+  updated_at: TimestampColumn;
+}
+
+export interface PlayerNotificationsTable {
+  id: string;
+  player_id: string;
+  type: string;
+  title: string;
+  body: string;
+  created_at: CreatedAtColumn;
+  read_at: NullableTimestampColumn;
+}
+
 export interface Database {
   admin_users: AdminUsersTable;
   admin_roles: AdminRolesTable;
@@ -251,4 +281,6 @@ export interface Database {
   transactions: TransactionsTable;
   games: GamesTable;
   bets: BetsTable;
+  kyc_verifications: KycVerificationsTable;
+  player_notifications: PlayerNotificationsTable;
 }

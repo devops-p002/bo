@@ -289,6 +289,14 @@ export const routes = [
     permissions: ['risk.highroller.view'],
     breadcrumb: 'Risk > High Roller Monitoring',
   },
+  {
+    path: '/risk/verification',
+    component: RiskPage,
+    title: 'Verification',
+    description: 'Review player KYC/identity verification submissions',
+    permissions: ['risk.verification.view'],
+    breadcrumb: 'Risk > Verification',
+  },
 
   // Bets Routes
   {
@@ -479,6 +487,11 @@ export const navigationMenu = [
         title: 'High Roller Monitoring',
         path: '/risk/high-roller-monitoring',
         permissions: ['risk.highroller.view'],
+      },
+      {
+        title: 'Verification',
+        path: '/risk/verification',
+        permissions: ['risk.verification.view'],
       },
     ],
   },

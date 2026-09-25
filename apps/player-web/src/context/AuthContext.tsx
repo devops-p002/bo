@@ -17,6 +17,7 @@ export interface Wallet {
   phone: string | null;
   dateOfBirth: string | null;
   country: string | null;
+  createdAt: string;
 }
 
 export interface ProfileUpdateInput {
@@ -60,10 +61,13 @@ const SESSION_EXPIRED_EVENT = 'betqueen-session-expired';
 // and redirecting an anonymous visitor off the register/lobby page the
 // instant that check runs would be a self-inflicted bug, not a feature.
 export async function apiFetch(path: string, options: RequestInit = {}): Promise<Response> {
+  // FormData (KYC document uploads) needs the browser's own multipart
+  // boundary in Content-Type, not the JSON default below.
+  const isFormData = options.body instanceof FormData;
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     credentials: 'include',
-    headers: { 'content-type': 'application/json', ...options.headers },
+    headers: isFormData ? options.headers : { 'content-type': 'application/json', ...options.headers },
   });
   if (response.status === 401 && path !== '/auth/me') {
     window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));

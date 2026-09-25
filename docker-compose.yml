@@ -14,6 +14,11 @@ networks:
 
 volumes:
   postgres-data:
+  # KYC identity documents - mounted into both player-api (writes on
+  # submission) and backoffice-api (reads for admin review). Never
+  # served through a public/static mount; both APIs only expose it
+  # through their own authenticated image endpoints.
+  kyc-uploads:
 
 services:
   postgres:
@@ -53,6 +58,8 @@ services:
     # except through the tunnel's own ingress rule.
     ports:
       - "127.0.0.1:6000:5000"
+    volumes:
+      - kyc-uploads:/app/uploads/kyc
     networks:
       - bo-internal
 
@@ -91,6 +98,8 @@ services:
     # backoffice-api.
     ports:
       - "127.0.0.1:6200:5200"
+    volumes:
+      - kyc-uploads:/app/uploads/kyc
     networks:
       - bo-internal
 

@@ -7,6 +7,7 @@ import MemberAnalysis from './components/MemberAnalysis';
 import HighRollerMonitoring from './components/HighRollerMonitoring';
 import RiskAlerts from './components/RiskAlerts';
 import SuspiciousActivity from './components/SuspiciousActivity';
+import Verification from './components/Verification';
 import useRisk from './hooks/useRisk';
 
 // Maps each routed path under /risk to the tab it should open on.
@@ -15,6 +16,7 @@ const TAB_BY_PATH = {
   '/risk/member-trace': 'trace',
   '/risk/member-analysis': 'analysis',
   '/risk/high-roller-monitoring': 'highrollers',
+  '/risk/verification': 'verification',
 };
 
 const Risk = () => {
@@ -30,6 +32,7 @@ const Risk = () => {
     { id: 'highrollers', label: 'High Roller Monitoring', component: HighRollerMonitoring },
     { id: 'analysis', label: 'Member Analysis', component: MemberAnalysis },
     { id: 'trace', label: 'Member Trace', component: MemberTrace },
+    { id: 'verification', label: 'Verification', component: Verification },
   ];
 
   const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.component || RiskAlerts;

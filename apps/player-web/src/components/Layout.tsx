@@ -1,22 +1,38 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
+import {
+  Cherry,
+  Crown,
+  Fish,
+  Gamepad2,
+  Gift,
+  Headset,
+  Home,
+  ShieldAlert,
+  Table2,
+  Ticket,
+  Trophy,
+  Video,
+  Zap,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const NAV_ITEMS = [
-  { to: '/', label: 'Home', icon: '⌂' },
-  { to: '/category/SLOTS', label: 'Slots', icon: '▦' },
-  { to: '/category/TABLE_GAMES', label: 'Table', icon: '♠' },
-  { to: '/games/game_betqueen_crash', label: 'Crash', icon: '⚡' },
-  { to: '/fishing', label: 'Fishing', icon: '≈' },
-  { to: '/arcade', label: 'Arcade', icon: '◆' },
-  { to: '/lottery', label: 'Lottery', icon: '✧' },
-  { to: '/category/LIVE_CASINO', label: 'Live Casino', icon: '●' },
-  { to: '/sports', label: 'Sports', icon: '▲' },
-  { to: '/promotions', label: 'Promotion', icon: '★' },
-  { to: '/vip-club', label: 'VIP Club', icon: '♛' },
-  { to: '/responsible-gaming', label: 'Responsible Gaming', icon: '⚠' },
-  { to: '/support', label: 'Live Support', icon: '☎' },
+const NAV_ITEMS: { to: string; label: string; icon: LucideIcon }[] = [
+  { to: '/', label: 'Home', icon: Home },
+  { to: '/category/SLOTS', label: 'Slots', icon: Cherry },
+  { to: '/category/TABLE_GAMES', label: 'Table', icon: Table2 },
+  { to: '/games/game_betqueen_crash', label: 'Crash', icon: Zap },
+  { to: '/fishing', label: 'Fishing', icon: Fish },
+  { to: '/arcade', label: 'Arcade', icon: Gamepad2 },
+  { to: '/lottery', label: 'Lottery', icon: Ticket },
+  { to: '/category/LIVE_CASINO', label: 'Live Casino', icon: Video },
+  { to: '/sports', label: 'Sports', icon: Trophy },
+  { to: '/promotions', label: 'Promotion', icon: Gift },
+  { to: '/vip-club', label: 'VIP Club', icon: Crown },
+  { to: '/responsible-gaming', label: 'Responsible Gaming', icon: ShieldAlert },
+  { to: '/support', label: 'Live Support', icon: Headset },
 ];
 
 const SIDEBAR_COLLAPSED_KEY = 'betqueen-sidebar-collapsed';
@@ -121,7 +137,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 }`
               }
             >
-              <span className="w-5 text-center shrink-0">{item.icon}</span>
+              <item.icon className="w-[18px] h-[18px] shrink-0" strokeWidth={2} />
               <span className={collapsed ? 'lg:hidden' : ''}>{item.label}</span>
             </NavLink>
           ))}

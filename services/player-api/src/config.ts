@@ -18,6 +18,12 @@ const schema = z.object({
   // served from a different subdomain than this API - same reasoning as
   // backoffice-api's CORS_ORIGIN.
   CORS_ORIGIN: nonEmptyString.default('https://betqueen.live'),
+
+  // KYC document uploads (front/back/selfie) - a named Docker volume in
+  // production (see docker-compose.yml), never a public/static mount;
+  // both this service and backoffice-api's admin review endpoint read
+  // files back only through their own authenticated image routes.
+  UPLOADS_DIR: nonEmptyString.default('/app/uploads/kyc'),
 });
 
 export type PlayerApiConfig = z.infer<typeof schema>;
