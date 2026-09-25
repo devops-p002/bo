@@ -14,31 +14,43 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/category/:category" element={<CategoryPage />} />
-            <Route path="/games/:gameId" element={<GameDetail />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route
-              path="/wallet"
-              element={
-                <ProtectedRoute>
-                  <Wallet />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </Layout>
+        <Routes>
+          {/* Login/Register are standalone full-screen pages (AuthLayout,
+              inside each page component) - deliberately not nested inside
+              the sidebar/header Layout below, the same way a real casino
+              site's own auth screens don't show its lobby nav around the
+              form. */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            path="*"
+            element={
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/category/:category" element={<CategoryPage />} />
+                  <Route path="/games/:gameId" element={<GameDetail />} />
+                  <Route
+                    path="/wallet"
+                    element={
+                      <ProtectedRoute>
+                        <Wallet />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <Profile />
+                      </ProtectedRoute>
+                    }
+                  />
+                </Routes>
+              </Layout>
+            }
+          />
+        </Routes>
       </AuthProvider>
     </BrowserRouter>
   );
