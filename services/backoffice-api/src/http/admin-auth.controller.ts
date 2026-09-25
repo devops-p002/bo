@@ -41,7 +41,7 @@ export class AuthController {
     // httpOnly so apps/backoffice-web's own JS can never read the token
     // (defense against XSS exfiltrating it, the whole point of moving
     // off localStorage) - SameSite=None;Secure because the frontend
-    // (admin.sunrion.online) and this API (api-admin.sunrion.online) are
+    // (back-office.admin.betqueen.live) and this API (api-back-office.admin.betqueen.live) are
     // different subdomains, which the browser treats as cross-site.
     reply.setCookie(SESSION_COOKIE_NAME, result.accessToken, {
       httpOnly: true,

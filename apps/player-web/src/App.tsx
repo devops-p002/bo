@@ -10,6 +10,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Wallet from './pages/Wallet';
 import Profile from './pages/Profile';
+import VipClub from './pages/VipClub';
+import ComingSoon from './pages/ComingSoon';
 
 export default function App() {
   return (
@@ -53,6 +55,17 @@ export default function App() {
                       </ProtectedRoute>
                     }
                   />
+                  <Route path="/vip-club" element={<VipClub />} />
+                  {/* No fishing/arcade/lottery/sportsbook/promotions/RG/support
+                      backend exists yet - honest placeholders rather than
+                      fabricated content, per CLAUDE.md. */}
+                  <Route path="/fishing" element={<ComingSoon title="Fishing" />} />
+                  <Route path="/arcade" element={<ComingSoon title="Arcade" />} />
+                  <Route path="/lottery" element={<ComingSoon title="Lottery" />} />
+                  <Route path="/sports" element={<ComingSoon title="Sports" />} />
+                  <Route path="/promotions" element={<ComingSoon title="Promotion" />} />
+                  <Route path="/responsible-gaming" element={<ComingSoon title="Responsible Gaming" />} />
+                  <Route path="/support" element={<ComingSoon title="Live Support" />} />
                 </Routes>
               </Layout>
             }
