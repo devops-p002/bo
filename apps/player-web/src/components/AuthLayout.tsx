@@ -26,9 +26,11 @@ export default function AuthLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-surface-900">
       <header className="h-16 shrink-0 flex items-center justify-between px-4 sm:px-6 border-b border-surface-700">
-        <Link to="/" className="flex items-center gap-2 font-extrabold text-lg tracking-tight">
-          <img src="/betqueen-logo.png" alt="" className="w-8 h-8 rounded-full" />
-          <span className="text-accent-400">Bet</span>Queen
+        <Link to="/" className="flex items-center gap-2.5 font-extrabold text-xl tracking-tight">
+          <img src="/betqueen-logo.png" alt="" className="w-11 h-11 rounded-full shrink-0" />
+          <span className="whitespace-nowrap">
+            <span className="text-accent-400">Bet</span>Queen
+          </span>
         </Link>
         <Link
           to="/"
