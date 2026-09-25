@@ -4,6 +4,7 @@ import fastifyCookie from '@fastify/cookie';
 // vs 5.x mismatch between @nestjs/platform-fastify's runtime and this
 // package.json's own type-only fastify dependency.
 import fastifyCors from '@fastify/cors';
+import fastifyMultipart from '@fastify/multipart';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { NestFactory } from '@nestjs/core';
 import { createLogger } from '@platform/logging';
@@ -32,6 +33,11 @@ async function bootstrap(): Promise<void> {
   await app.register(fastifyCors as any, { origin: config.CORS_ORIGIN, credentials: true });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await app.register(fastifyCookie as any);
+  // KYC document uploads (POST /kyc/verification) - 3MB per file, matching
+  // the reference screenshot's own stated limit, enforced here rather
+  // than trusted from client-side validation alone.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await app.register(fastifyMultipart as any, { limits: { fileSize: 3 * 1024 * 1024, files: 3 } });
 
   await app.listen(config.PORT, '0.0.0.0');
   logger.info({ port: config.PORT }, 'player-api service listening');

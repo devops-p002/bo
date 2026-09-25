@@ -114,6 +114,42 @@ export interface BetsTable {
   settled_at: NullableTimestampColumn;
 }
 
+export type KycDocumentType = 'PASSPORT' | 'DRIVERS_LICENSE' | 'NATIONAL_ID';
+export type KycStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+// Read/write here is INSERT+SELECT only (no UPDATE grant) - deciding a
+// submission's status is exclusively an admin action through
+// backoffice-api's own KycService, same boundary as BetsTable/
+// TransactionsTable above.
+export interface KycVerificationsTable {
+  id: string;
+  player_id: string;
+  document_type: ColumnType<KycDocumentType, KycDocumentType | undefined, KycDocumentType>;
+  document_number: string;
+  expiry_date: ColumnType<Date, string | Date | undefined, string | Date>;
+  front_image_path: string;
+  back_image_path: string;
+  selfie_image_path: string;
+  status: ColumnType<KycStatus, KycStatus | undefined, KycStatus>;
+  rejection_reason: string | null;
+  reviewed_by: string | null;
+  reviewed_at: NullableTimestampColumn;
+  created_at: CreatedAtColumn;
+  updated_at: TimestampColumn;
+}
+
+// INSERT here is admin-only (backoffice-api writes on a KYC rejection) -
+// player_api_app only gets SELECT + UPDATE (marking its own read_at).
+export interface PlayerNotificationsTable {
+  id: string;
+  player_id: string;
+  type: string;
+  title: string;
+  body: string;
+  created_at: CreatedAtColumn;
+  read_at: NullableTimestampColumn;
+}
+
 export interface Database {
   players: PlayersTable;
   transactions: TransactionsTable;
@@ -121,4 +157,6 @@ export interface Database {
   player_devices: PlayerDevicesTable;
   games: GamesTable;
   bets: BetsTable;
+  kyc_verifications: KycVerificationsTable;
+  player_notifications: PlayerNotificationsTable;
 }

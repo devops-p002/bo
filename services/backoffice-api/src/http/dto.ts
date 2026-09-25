@@ -195,3 +195,20 @@ export const updateGameLimitsSchema = z.object({
   maxWin: z.number().nonnegative().optional(),
 });
 export type UpdateGameLimitsDto = z.infer<typeof updateGameLimitsSchema>;
+
+const KYC_STATUSES = ['PENDING', 'APPROVED', 'REJECTED'] as const;
+
+export const listKycQuerySchema = z.object({
+  status: z.enum(KYC_STATUSES).optional(),
+  playerId: z.string().trim().min(1).optional(),
+  search: z.string().trim().min(1).optional(),
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(200).default(20),
+});
+export type ListKycQueryDto = z.infer<typeof listKycQuerySchema>;
+
+export const updateKycStatusSchema = z.object({
+  status: z.enum(['APPROVED', 'REJECTED']),
+  rejectionReason: z.string().trim().min(1).optional(),
+});
+export type UpdateKycStatusDto = z.infer<typeof updateKycStatusSchema>;

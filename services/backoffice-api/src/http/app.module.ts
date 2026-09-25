@@ -19,6 +19,7 @@ import { PlayersService } from '../players.service.js';
 import { TransactionsService } from '../transactions.service.js';
 import { BetsService } from '../bets.service.js';
 import { GameLimitsService } from '../game-limits.service.js';
+import { KycService } from '../kyc.service.js';
 import { AppErrorFilter } from './app-error.filter.js';
 import { AdminAuthController, AuthController } from './admin-auth.controller.js';
 import { AuditIndexController } from './audit-index.controller.js';
@@ -32,6 +33,7 @@ import { PlayersController } from './players.controller.js';
 import { TransactionsController } from './transactions.controller.js';
 import { BetsController } from './bets.controller.js';
 import { GameLimitsController } from './game-limits.controller.js';
+import { KycController } from './kyc.controller.js';
 import { RolesGuard } from './roles.guard.js';
 import { DB_TOKEN } from './tokens.js';
 
@@ -52,6 +54,7 @@ export { DB_TOKEN };
     TransactionsController,
     BetsController,
     GameLimitsController,
+    KycController,
   ],
   providers: [
     {
@@ -127,6 +130,11 @@ export { DB_TOKEN };
       provide: GameLimitsService,
       inject: [DB_TOKEN],
       useFactory: (db: Kysely<Database>) => new GameLimitsService(db),
+    },
+    {
+      provide: KycService,
+      inject: [DB_TOKEN],
+      useFactory: (db: Kysely<Database>) => new KycService(db),
     },
     {
       provide: AuditIndexService,

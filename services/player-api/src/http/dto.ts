@@ -55,3 +55,12 @@ export const listGamesQuerySchema = z.object({
   category: z.enum(GAME_CATEGORIES).optional(),
 });
 export type ListGamesQueryDto = z.infer<typeof listGamesQuerySchema>;
+
+export const KYC_DOCUMENT_TYPES = ['PASSPORT', 'DRIVERS_LICENSE', 'NATIONAL_ID'] as const;
+
+export const submitKycFieldsSchema = z.object({
+  documentType: z.enum(KYC_DOCUMENT_TYPES),
+  documentNumber: z.string().trim().min(1).max(64),
+  expiryDate: z.string().date(),
+});
+export type SubmitKycFieldsDto = z.infer<typeof submitKycFieldsSchema>;
