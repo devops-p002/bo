@@ -3,24 +3,26 @@ import type { LucideIcon } from 'lucide-react';
 import { Bell, BadgeCheck, ChevronRight, Crown, Dices, Gift, LogOut, Percent, ReceiptText, ShieldCheck, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import CopyButton from '../components/CopyButton';
+import GlassIconBadge from '../components/GlassIconBadge';
+import type { GlassTone } from '../components/GlassIconBadge';
 
 interface MenuItem {
   icon: LucideIcon;
+  tone: GlassTone;
   label: string;
   to: string;
-  badge?: boolean;
 }
 
 const MENU_ITEMS: MenuItem[] = [
-  { icon: Bell, label: 'Notifications', to: '/profile/notifications' },
-  { icon: User, label: 'Personal info', to: '/profile/personal-info' },
-  { icon: ShieldCheck, label: 'Login & Security', to: '/profile/security' },
-  { icon: BadgeCheck, label: 'Verification', to: '/profile/verification' },
-  { icon: ReceiptText, label: 'Transaction records', to: '/profile/transactions' },
-  { icon: Dices, label: 'Betting records', to: '/profile/bets' },
-  { icon: Percent, label: 'Turnover', to: '/profile/bets' },
-  { icon: Crown, label: 'My VIP', to: '/vip-club' },
-  { icon: Gift, label: 'Refer a friend', to: '/profile/refer' },
+  { icon: Bell, tone: 'neutral', label: 'Notifications', to: '/profile/notifications' },
+  { icon: User, tone: 'brand', label: 'Personal info', to: '/profile/personal-info' },
+  { icon: ShieldCheck, tone: 'success', label: 'Login & Security', to: '/profile/security' },
+  { icon: BadgeCheck, tone: 'brand', label: 'Verification', to: '/profile/verification' },
+  { icon: ReceiptText, tone: 'success', label: 'Transaction records', to: '/profile/transactions' },
+  { icon: Dices, tone: 'brand', label: 'Betting records', to: '/profile/bets' },
+  { icon: Percent, tone: 'brand', label: 'Turnover', to: '/profile/bets' },
+  { icon: Crown, tone: 'brand', label: 'My VIP', to: '/vip-club' },
+  { icon: Gift, tone: 'success', label: 'Refer a friend', to: '/profile/refer' },
 ];
 
 export default function Profile() {
@@ -65,7 +67,7 @@ export default function Profile() {
             to={item.to}
             className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-surface-700 transition-colors"
           >
-            <item.icon className="w-[18px] h-[18px] text-surface-50/60 shrink-0" />
+            <GlassIconBadge icon={item.icon} tone={item.tone} size="sm" />
             <span className="flex-1">{item.label}</span>
             <ChevronRight className="w-4 h-4 text-surface-50/30 shrink-0" />
           </Link>
@@ -75,7 +77,7 @@ export default function Profile() {
           onClick={logout}
           className="w-full flex items-center gap-3 px-4 py-3 text-sm text-loss hover:bg-surface-700 transition-colors"
         >
-          <LogOut className="w-[18px] h-[18px] shrink-0" />
+          <GlassIconBadge icon={LogOut} tone="danger" size="sm" />
           <span className="flex-1 text-left">Log out</span>
         </button>
       </div>

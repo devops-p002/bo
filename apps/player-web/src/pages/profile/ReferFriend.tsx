@@ -1,6 +1,7 @@
 import { Gift } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import CopyButton from '../../components/CopyButton';
+import GlassIconBadge from '../../components/GlassIconBadge';
 import ProfileSubpage from '../../components/ProfileSubpage';
 
 export default function ReferFriend() {
@@ -15,9 +16,7 @@ export default function ReferFriend() {
     <ProfileSubpage title="Refer a friend">
       <div className="card p-6 space-y-4">
         <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-full bg-accent-500/15 flex items-center justify-center shrink-0">
-            <Gift className="w-5 h-5 text-accent-400" />
-          </div>
+          <GlassIconBadge icon={Gift} tone="success" size="md" />
           <p className="text-sm text-surface-50/60">Share your link - anyone who signs up through it is credited as your referral.</p>
         </div>
         <div className="flex items-center gap-2 bg-surface-700 border border-surface-600 rounded-md px-3 py-2">

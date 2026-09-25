@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+import { ReceiptText } from 'lucide-react';
 import { listMyTransactions } from '../../services/api/wallet';
 import type { WalletTransaction } from '../../services/api/wallet';
+import GlassIconBadge from '../../components/GlassIconBadge';
 import ProfileSubpage from '../../components/ProfileSubpage';
 
 const STATUS_STYLES: Record<string, string> = {
@@ -26,6 +28,10 @@ export default function TransactionRecords() {
   return (
     <ProfileSubpage title="Transaction records">
       <div className="card p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <GlassIconBadge icon={ReceiptText} tone="success" size="sm" />
+          <h2 className="text-sm font-bold text-surface-50/80">History</h2>
+        </div>
         {loading ? (
           <p className="text-surface-50/50 text-sm">Loading…</p>
         ) : transactions.length === 0 ? (

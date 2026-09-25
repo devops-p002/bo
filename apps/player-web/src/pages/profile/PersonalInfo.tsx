@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import GlassIconBadge from '../../components/GlassIconBadge';
 import ProfileSubpage from '../../components/ProfileSubpage';
 
 export default function PersonalInfo() {
@@ -38,9 +40,12 @@ export default function PersonalInfo() {
   return (
     <ProfileSubpage title="Personal info">
       <div className="card p-6">
-        <p className="text-sm text-surface-50/50 mb-5">
-          Signing up only needed your email - these details are optional, but help us verify your account and process withdrawals.
-        </p>
+        <div className="flex items-center gap-3 mb-5">
+          <GlassIconBadge icon={User} tone="brand" size="sm" />
+          <p className="text-sm text-surface-50/50">
+            Signing up only needed your email - these details are optional, but help us verify your account and process withdrawals.
+          </p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4 max-w-lg">
           <div className="grid grid-cols-2 gap-3">

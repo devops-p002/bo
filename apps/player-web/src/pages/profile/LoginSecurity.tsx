@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Laptop, Smartphone, TabletSmartphone } from 'lucide-react';
+import { KeyRound, Laptop, Smartphone, TabletSmartphone } from 'lucide-react';
 import { changePassword, listMyDevices } from '../../services/api/security';
 import type { PlayerDevice } from '../../services/api/security';
+import GlassIconBadge from '../../components/GlassIconBadge';
 import ProfileSubpage from '../../components/ProfileSubpage';
 
 const DEVICE_ICON: Record<string, typeof Laptop> = {
@@ -66,7 +67,10 @@ export default function LoginSecurity() {
   return (
     <ProfileSubpage title="Login & Security">
       <div className="card p-6">
-        <h2 className="text-sm font-bold mb-4 text-surface-50/80">Change password</h2>
+        <div className="flex items-center gap-3 mb-4">
+          <GlassIconBadge icon={KeyRound} tone="success" size="sm" />
+          <h2 className="text-sm font-bold text-surface-50/80">Change password</h2>
+        </div>
         <PasswordForm />
       </div>
 
@@ -82,9 +86,7 @@ export default function LoginSecurity() {
               const Icon = DEVICE_ICON[device.device] ?? Laptop;
               return (
                 <li key={device.id} className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-surface-700 flex items-center justify-center shrink-0">
-                    <Icon className="w-4 h-4 text-surface-50/60" />
-                  </div>
+                  <GlassIconBadge icon={Icon} tone="neutral" size="sm" />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">
                       {device.device} {device.ipAddress ? `· ${device.ipAddress}` : ''}

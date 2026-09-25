@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
+import { Dices, Percent } from 'lucide-react';
 import { listMyBets } from '../../services/api/bets';
 import type { PlayerBet } from '../../services/api/bets';
 import { useAuth } from '../../context/AuthContext';
+import GlassIconBadge from '../../components/GlassIconBadge';
 import ProfileSubpage from '../../components/ProfileSubpage';
 
 const STATUS_STYLES: Record<string, string> = {
@@ -29,14 +31,21 @@ export default function BettingRecords() {
 
   return (
     <ProfileSubpage title="Betting records">
-      <div className="card p-6">
-        <p className="text-sm text-surface-50/50">Turnover</p>
-        <p className="text-2xl font-extrabold">
-          {turnover.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {user?.currency ?? 'USD'}
-        </p>
+      <div className="card p-6 flex items-center gap-3">
+        <GlassIconBadge icon={Percent} tone="brand" size="md" />
+        <div>
+          <p className="text-sm text-surface-50/50">Turnover</p>
+          <p className="text-2xl font-extrabold">
+            {turnover.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {user?.currency ?? 'USD'}
+          </p>
+        </div>
       </div>
 
       <div className="card p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <GlassIconBadge icon={Dices} tone="success" size="sm" />
+          <h2 className="text-sm font-bold text-surface-50/80">Bet history</h2>
+        </div>
         {loading ? (
           <p className="text-surface-50/50 text-sm">Loading…</p>
         ) : bets.length === 0 ? (
